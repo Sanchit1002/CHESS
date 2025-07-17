@@ -1,0 +1,92 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient definitions -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="chessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f2937;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#374151;stop-opacity:0.9" />
+    </linearGradient>
+    
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#1e3a8a;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#skyGradient)"/>
+  
+  <!-- Floating chess pieces silhouettes -->
+  <g opacity="0.1">
+    <!-- King 1 -->
+    <path d="M200 300 L220 280 L240 300 L250 320 L240 340 L220 360 L200 340 L190 320 Z" fill="white"/>
+    <rect x="215" y="360" width="10" height="20" fill="white"/>
+    <rect x="210" y="380" width="20" height="10" fill="white"/>
+    
+    <!-- Queen 1 -->
+    <path d="M400 200 L420 180 L440 200 L450 220 L440 240 L420 260 L400 240 L390 220 Z" fill="white"/>
+    <circle cx="420" cy="260" r="8" fill="white"/>
+    <rect x="415" y="260" width="10" height="15" fill="white"/>
+    
+    <!-- Bishop 1 -->
+    <path d="M600 350 L620 330 L640 350 L650 370 L640 390 L620 410 L600 390 L590 370 Z" fill="white"/>
+    <circle cx="620" cy="410" r="6" fill="white"/>
+    <rect x="617" y="410" width="6" height="12" fill="white"/>
+    
+    <!-- Rook 1 -->
+    <rect x="800" y="320" width="40" height="60" fill="white"/>
+    <rect x="805" y="320" width="30" height="8" fill="white"/>
+    <rect x="810" y="328" width="20" height="8" fill="white"/>
+    
+    <!-- Knight 1 -->
+    <path d="M1000 250 L1020 230 L1040 250 L1050 270 L1040 290 L1020 310 L1000 290 L990 270 Z" fill="white"/>
+    <path d="M1010 310 L1030 310 L1020 330 L1010 310" fill="white"/>
+    
+    <!-- Pawns -->
+    <circle cx="300" cy="450" r="12" fill="white"/>
+    <rect x="295" y="450" width="10" height="20" fill="white"/>
+    
+    <circle cx="500" cy="500" r="12" fill="white"/>
+    <rect x="495" y="500" width="10" height="20" fill="white"/>
+    
+    <circle cx="700" cy="180" r="12" fill="white"/>
+    <rect x="695" y="180" width="10" height="20" fill="white"/>
+    
+    <circle cx="900" cy="150" r="12" fill="white"/>
+    <rect x="895" y="150" width="10" height="20" fill="white"/>
+    
+    <circle cx="1100" cy="400" r="12" fill="white"/>
+    <rect x="1095" y="400" width="10" height="20" fill="white"/>
+  </g>
+  
+  <!-- Chessboard pattern overlay -->
+  <g opacity="0.05">
+    <defs>
+      <pattern id="chessPattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+        <rect x="0" y="0" width="40" height="40" fill="#1f2937"/>
+        <rect x="40" y="0" width="40" height="40" fill="#374151"/>
+        <rect x="0" y="40" width="40" height="40" fill="#374151"/>
+        <rect x="40" y="40" width="40" height="40" fill="#1f2937"/>
+      </pattern>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#chessPattern)"/>
+  </g>
+  
+  <!-- Glow effects -->
+  <circle cx="960" cy="540" r="400" fill="url(#glowGradient)"/>
+  <circle cx="960" cy="540" r="300" fill="url(#glowGradient)"/>
+  <circle cx="960" cy="540" r="200" fill="url(#glowGradient)"/>
+  
+  <!-- Subtle geometric patterns -->
+  <g opacity="0.03" stroke="white" stroke-width="1" fill="none">
+    <line x1="0" y1="0" x2="1920" y2="1080"/>
+    <line x1="1920" y1="0" x2="0" y2="1080"/>
+    <line x1="960" y1="0" x2="960" y2="1080"/>
+    <line x1="0" y1="540" x2="1920" y2="540"/>
+  </g>
+</svg> 

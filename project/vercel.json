@@ -1,0 +1,10 @@
+[object Object]
+ buildCommand": npm run build",
+  outputDirectory": "dist",
+  framework": "vite",
+ rewrites: [  [object Object]
+   source": "/(.*)",
+     destination":/index.html"
+    }
+  ]
+} 
