@@ -45,12 +45,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
 
   // Load real data
   useEffect(() => {
+    const loadData = async () => {
+      try {
     // Get player stats
-    const stats = dataService.getPlayerStatsByUsername(username);
+        const stats = await dataService.getPlayerStatsByUsername(username);
     setPlayerStats(stats);
 
     // Get game history for this player
-    const playerGameResults = dataService.getPlayerGameResults(username);
+        const playerGameResults = await dataService.getPlayerGameResults(username);
     const gameRecords: GameRecord[] = playerGameResults.map(result => ({
       id: result.id,
       opponent: result.player1 === username ? result.player2 : result.player1,
@@ -61,7 +63,9 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
       rating: result.player1 === username ? result.player1Rating : result.player2Rating,
       timeControl: result.timeControl
     }));
-    setGameHistory(gameRecords);
+        // Sort by date in descending order (most recent first)
+        const sortedGameRecords = gameRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setGameHistory(sortedGameRecords);
 
     // Get achievements
     const playerAchievements = dataService.getPlayerAchievements(username);
@@ -70,6 +74,12 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
       iconComponent: getAchievementIcon(achievement.icon)
     }));
     setAchievements(achievementsWithIcons);
+      } catch (error) {
+        console.error('Error loading analytics data:', error);
+      }
+    };
+
+    loadData();
   }, [username, dataService]);
 
   const getAchievementIcon = (iconName: string) => {
@@ -106,7 +116,11 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    // Show seconds with 2 decimal places if not an integer
+    const secondsDisplay = Number.isInteger(remainingSeconds)
+      ? remainingSeconds.toString().padStart(2, '0')
+      : remainingSeconds.toFixed(2).padStart(5, '0');
+    return `${minutes}:${secondsDisplay}`;
   };
 
   const formatDate = (date: Date) => {
@@ -234,7 +248,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Game Time</p>
-                      <p className="text-3xl font-bold text-purple-600">{formatDuration(averageGameTime)}</p>
+                      <p className="text-3xl font-bold text-purple-600 truncate overflow-hidden whitespace-nowrap">{formatDuration(averageGameTime)}</p>
                     </div>
                     <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full">
                       <Clock className="text-purple-600" size={24} />

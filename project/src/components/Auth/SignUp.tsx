@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Gamepad2, X } from 'lucide-react';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
 
 interface SignUpProps {
   onSignUp: (username: string, email: string, password: string) => void;
@@ -14,9 +17,10 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitchToSignIn, isLo
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string; confirmPassword?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; email?: string; password?: string; confirmPassword?: string; firebase?: string }>({});
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -42,7 +46,32 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitchToSignIn, isLo
       return;
     }
 
-    onSignUp(username, email, password);
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Store username in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        username,
+        email,
+        createdAt: new Date(),
+        elo: 1200,
+        achievements: [],
+        stats: { wins: 0, losses: 0, draws: 0 }
+      });
+      onSignUp(username, email, password); // Notify parent for navigation
+    } catch (error: any) {
+      console.error('Firebase error:', error);
+      let message = 'Failed to sign up.';
+      if (error.code === 'auth/email-already-in-use') message = 'Email is already in use.';
+      if (error.code === 'auth/invalid-email') message = 'Invalid email address.';
+      if (error.code === 'auth/weak-password') message = 'Password is too weak.';
+      if (error.code === 'auth/user-not-found') message = 'No user found with this email.';
+      if (error.code === 'auth/wrong-password') message = 'Incorrect password.';
+      if (error.message) message += ` (${error.message})`;
+      setErrors(prev => ({ ...prev, firebase: message }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,6 +111,9 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitchToSignIn, isLo
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {errors.firebase && (
+              <div className="text-red-400 text-center text-sm font-medium mb-2">{errors.firebase}</div>
+            )}
             <div className="space-y-4">
               {/* Username Field */}
               <div>
@@ -242,10 +274,10 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitchToSignIn, isLo
             {/* Create Account Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
             >
-              {isLoading ? (
+              {isLoading || loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                   Creating account...

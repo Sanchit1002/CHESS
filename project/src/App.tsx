@@ -3,6 +3,8 @@ import { SignIn } from './components/Auth/SignIn';
 import { SignUp } from './components/Auth/SignUp';
 import { GameModeSelection } from './components/GameModeSelection';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
+import { MultiplayerGame } from './components/MultiplayerGame';
+import { Leaderboard } from './components/Leaderboard';
 import { FriendSystem } from './components/FriendSystem';
 import { Game } from './components/Game';
 import { Analytics } from './components/Analytics';
@@ -10,7 +12,7 @@ import { Competitive } from './components/Competitive';
 import { TestData } from './components/TestData';
 import { Moon, Sun } from 'lucide-react';
 
-type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData';
+type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard';
 
 interface User {
   username: string;
@@ -25,10 +27,14 @@ function App() {
   const [isSpectator, setIsSpectator] = useState(false);
   const [roomId, setRoomId] = useState<string>('');
   const [opponentName, setOpponentName] = useState<string>('');
+  const [multiplayerRoomId, setMultiplayerRoomId] = useState<string>('');
+  const [isMultiplayerSpectator, setIsMultiplayerSpectator] = useState(false);
   const [customTimeControl, setCustomTimeControl] = useState<{ minutes: number; seconds: number; increment: number; name: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [selectedColor, setSelectedColor] = useState<'white' | 'black' | 'random'>('white');
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [wantsHelp, setWantsHelp] = useState<boolean | null>(null);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -95,7 +101,13 @@ function App() {
     setOpponentName(opponent);
     setIsSpectator(false);
     setRoomId(`room_${Date.now()}`);
+    
+    // Show help dialog for new games
+    if (wantsHelp === null) {
+      setShowHelpDialog(true);
+    } else {
     setCurrentState('game');
+    }
   };
 
   const handleJoinGame = (roomId: string, isSpectator: boolean) => {
@@ -104,6 +116,13 @@ function App() {
     setRoomId(roomId);
     setIsSpectator(isSpectator);
     setCurrentState('game');
+  };
+
+  const handleJoinMultiplayerGame = (roomId: string, isSpectator: boolean) => {
+    console.log(`Joining multiplayer game room ${roomId} as ${isSpectator ? 'spectator' : 'player'}`);
+    setMultiplayerRoomId(roomId);
+    setIsMultiplayerSpectator(isSpectator);
+    setCurrentState('multiplayerGame');
   };
 
   const handleCreateGame = (timeControl: string, boardTheme: string) => {
@@ -124,6 +143,12 @@ function App() {
     localStorage.removeItem('chessUser');
     setUser(null);
     setCurrentState('signin');
+  };
+
+  const handleHelpPreference = (wantsHelp: boolean) => {
+    setWantsHelp(wantsHelp);
+    setShowHelpDialog(false);
+    setCurrentState('game');
   };
 
   const handleBackToMenu = () => {
@@ -163,6 +188,10 @@ function App() {
     setCurrentState('testData');
   };
 
+  const switchToLeaderboard = () => {
+    setCurrentState('leaderboard');
+  };
+
   const toggleDarkMode = () => setDarkMode((d) => !d);
 
   useEffect(() => {
@@ -173,24 +202,74 @@ function App() {
     }
   }, [darkMode]);
 
+  useEffect(() => {
+    const isAuthPage = currentState === 'signin' || currentState === 'signup';
+    if (isAuthPage) {
+      document.body.classList.add('bg-gray-900');
+      document.body.classList.remove('bg-amber-50');
+    } else {
+      document.body.classList.remove('bg-gray-900');
+      document.body.classList.add('bg-amber-50');
+    }
+  }, [currentState]);
+
   const renderContent = () => {
     console.log('Current state:', currentState, 'User:', user);
+    
+    // Show help dialog if needed
+    if (showHelpDialog) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-6xl mb-4">♔</div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Chess!</h2>
+              <p className="text-gray-600 mb-6">
+                Would you like move suggestions to help you learn?
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleHelpPreference(true)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  Yes, show suggestions
+                </button>
+                <button
+                  onClick={() => handleHelpPreference(false)}
+                  className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  No, I know chess
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-4">
+                You can change this later in settings
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     switch (currentState) {
       case 'signin':
         return (
-          <SignIn
-            onSignIn={handleSignIn}
-            onSwitchToSignUp={switchToSignUp}
-            isLoading={isLoading}
-          />
+          <div className="dark">
+            <SignIn
+              onSignIn={handleSignIn}
+              onSwitchToSignUp={switchToSignUp}
+              isLoading={isLoading}
+            />
+          </div>
         );
       case 'signup':
         return (
-          <SignUp
-            onSignUp={handleSignUp}
-            onSwitchToSignIn={switchToSignIn}
-            isLoading={isLoading}
-          />
+          <div className="dark">
+            <SignUp
+              onSignUp={handleSignUp}
+              onSwitchToSignIn={switchToSignIn}
+              isLoading={isLoading}
+            />
+          </div>
         );
       case 'gameMode':
         return user ? (
@@ -215,9 +294,24 @@ function App() {
         return user ? (
           <MultiplayerLobby
             onBack={switchToGameMode}
-            onJoinGame={handleJoinGame}
+            onJoinGame={handleJoinMultiplayerGame}
             onCreateGame={handleCreateGame}
             username={user.username}
+          />
+        ) : (
+          <SignIn
+            onSignIn={handleSignIn}
+            onSwitchToSignUp={switchToSignUp}
+            isLoading={isLoading}
+          />
+        );
+      case 'multiplayerGame':
+        return user ? (
+          <MultiplayerGame
+            roomId={multiplayerRoomId}
+            username={user.username}
+            isSpectator={isMultiplayerSpectator}
+            onBack={switchToMultiplayer}
           />
         ) : (
           <SignIn
@@ -284,6 +378,18 @@ function App() {
             isLoading={isLoading}
           />
         );
+      case 'leaderboard':
+        return user ? (
+          <Leaderboard
+            onBack={switchToGameMode}
+          />
+        ) : (
+          <SignIn
+            onSignIn={handleSignIn}
+            onSwitchToSignUp={switchToSignUp}
+            isLoading={isLoading}
+          />
+        );
       case 'game':
         return user ? (
           (() => {
@@ -314,6 +420,7 @@ function App() {
                 customTimeControl={customTimeControl}
                 whitePlayerName={whitePlayerName}
                 blackPlayerName={blackPlayerName}
+                showSuggestions={wantsHelp || false}
               />
             );
           })()
@@ -335,8 +442,10 @@ function App() {
     }
   };
 
+  const isAuthPage = currentState === 'signin' || currentState === 'signup';
+
   return (
-    <div className="min-h-screen bg-amber-50 dark:bg-gray-900 transition-colors duration-300">
+    <div className={isAuthPage ? 'min-h-screen' : ''}>
       {/* Header with dark mode toggle */}
       <div className="flex items-center justify-end px-4 py-2">
         <button

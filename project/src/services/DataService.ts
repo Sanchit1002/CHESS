@@ -1,4 +1,5 @@
 import { GameResult, PlayerStats, LeaderboardEntry, Achievement } from '../types';
+import { FirebaseService } from './FirebaseService';
 
 // ELO Rating System Constants
 const K_FACTOR = 32; // Rating change factor
@@ -6,8 +7,11 @@ const INITIAL_RATING = 1200;
 
 export class DataService {
   private static instance: DataService;
+  private firebaseService: FirebaseService;
   
-  private constructor() {}
+  private constructor() {
+    this.firebaseService = FirebaseService.getInstance();
+  }
   
   static getInstance(): DataService {
     if (!DataService.instance) {
@@ -17,17 +21,45 @@ export class DataService {
   }
 
   // Save game result
-  saveGameResult(result: GameResult): void {
-    const gameResults = this.getGameResults();
+  async saveGameResult(result: GameResult): Promise<void> {
+    try {
+      // Save to Firebase
+      await this.firebaseService.saveGameResult(result);
+      
+      // Also save to localStorage as backup
+      const gameResults = await this.getGameResults();
     gameResults.push(result);
     localStorage.setItem('chessGameResults', JSON.stringify(gameResults));
     
-    // Update player stats
-    this.updatePlayerStats(result);
+      // Update player stats in localStorage as backup
+      await this.updatePlayerStats(result);
+    } catch (error) {
+      console.error('Error saving game result:', error);
+      throw error;
+    }
   }
 
   // Get all game results
-  getGameResults(): GameResult[] {
+  async getGameResults(): Promise<GameResult[]> {
+    try {
+      // Try to get from Firebase first
+      const firebaseResults = await this.firebaseService.getAllGameResults();
+      if (firebaseResults.length > 0) {
+        return firebaseResults;
+      }
+      
+      // Fallback to localStorage
+      const stored = localStorage.getItem('chessGameResults');
+      if (!stored) return [];
+      
+      const results = JSON.parse(stored);
+      return results.map((result: any) => ({
+        ...result,
+        date: new Date(result.date)
+      }));
+    } catch (error) {
+      console.error('Error getting game results:', error);
+      // Fallback to localStorage
     const stored = localStorage.getItem('chessGameResults');
     if (!stored) return [];
     
@@ -36,14 +68,31 @@ export class DataService {
       ...result,
       date: new Date(result.date)
     }));
+    }
   }
 
   // Get game results for a specific player
-  getPlayerGameResults(username: string): GameResult[] {
-    const allResults = this.getGameResults();
-    return allResults.filter(result => 
+  async getPlayerGameResults(username: string): Promise<GameResult[]> {
+    try {
+      // Try to get from Firebase first
+      const firebaseResults = await this.firebaseService.getPlayerGameResults(username);
+      if (firebaseResults.length > 0) {
+        return firebaseResults;
+      }
+      
+      // Fallback to localStorage
+      const allResults = await this.getGameResults();
+      return allResults.filter((result: GameResult) => 
+        result.player1 === username || result.player2 === username
+      );
+    } catch (error) {
+      console.error('Error getting player game results:', error);
+      // Fallback to localStorage
+      const allResults = await this.getGameResults();
+      return allResults.filter((result: GameResult) => 
       result.player1 === username || result.player2 === username
     );
+    }
   }
 
   // Calculate ELO rating change
@@ -53,8 +102,8 @@ export class DataService {
   }
 
   // Update player stats after a game
-  private updatePlayerStats(gameResult: GameResult): void {
-    const playerStats = this.getPlayerStats();
+  private async updatePlayerStats(gameResult: GameResult): Promise<void> {
+    const playerStats = await this.getPlayerStats();
     
     // Update player 1 stats
     const player1Stats = this.getOrCreatePlayerStats(gameResult.player1, playerStats);
@@ -64,7 +113,7 @@ export class DataService {
     const player2Stats = this.getOrCreatePlayerStats(gameResult.player2, playerStats);
     this.updatePlayerStatsFromGame(player2Stats, gameResult, gameResult.player2);
     
-    // Save updated stats
+    // Save updated stats to localStorage as backup
     localStorage.setItem('chessPlayerStats', JSON.stringify(playerStats));
   }
 
@@ -135,7 +184,26 @@ export class DataService {
   }
 
   // Get player stats
-  getPlayerStats(): PlayerStats[] {
+  async getPlayerStats(): Promise<PlayerStats[]> {
+    try {
+      // Try to get from Firebase first
+      const firebaseStats = await this.firebaseService.getPlayerStats();
+      if (firebaseStats.length > 0) {
+        return firebaseStats;
+      }
+      
+      // Fallback to localStorage
+      const stored = localStorage.getItem('chessPlayerStats');
+      if (!stored) return [];
+      
+      const stats = JSON.parse(stored);
+      return stats.map((stat: any) => ({
+        ...stat,
+        lastGameDate: stat.lastGameDate ? new Date(stat.lastGameDate) : undefined
+      }));
+    } catch (error) {
+      console.error('Error getting player stats:', error);
+      // Fallback to localStorage
     const stored = localStorage.getItem('chessPlayerStats');
     if (!stored) return [];
     
@@ -144,36 +212,73 @@ export class DataService {
       ...stat,
       lastGameDate: stat.lastGameDate ? new Date(stat.lastGameDate) : undefined
     }));
+    }
   }
 
   // Get stats for a specific player
-  getPlayerStatsByUsername(username: string): PlayerStats | null {
-    const allStats = this.getPlayerStats();
-    return allStats.find(stats => stats.username === username) || null;
+  async getPlayerStatsByUsername(username: string): Promise<PlayerStats | null> {
+    try {
+      // Try to get from Firebase first
+      const firebaseStats = await this.firebaseService.getPlayerStatsByUsername(username);
+      if (firebaseStats) {
+        return firebaseStats;
+      }
+      
+      // Fallback to localStorage
+      const allStats = await this.getPlayerStats();
+      return allStats.find((stats: PlayerStats) => stats.username === username) || null;
+    } catch (error) {
+      console.error('Error getting player stats by username:', error);
+      // Fallback to localStorage
+      const allStats = await this.getPlayerStats();
+      return allStats.find((stats: PlayerStats) => stats.username === username) || null;
+    }
   }
 
   // Get leaderboard
-  getLeaderboard(): LeaderboardEntry[] {
-    const playerStats = this.getPlayerStats();
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    try {
+      // Try to get from Firebase first
+      const firebaseLeaderboard = await this.firebaseService.getLeaderboard();
+      if (firebaseLeaderboard.length > 0) {
+        return firebaseLeaderboard;
+      }
+      
+      // Fallback to localStorage
+      const playerStats = await this.getPlayerStats();
     const sortedStats = playerStats
-      .sort((a, b) => b.rating - a.rating)
-      .map((player, index) => ({
+        .sort((a: PlayerStats, b: PlayerStats) => b.rating - a.rating)
+        .map((player: PlayerStats, index: number) => ({
         rank: index + 1,
         player,
         change: 0 // This would be calculated from recent games
       }));
     
     return sortedStats;
+    } catch (error) {
+      console.error('Error getting leaderboard:', error);
+      // Fallback to localStorage
+      const playerStats = await this.getPlayerStats();
+      const sortedStats = playerStats
+        .sort((a: PlayerStats, b: PlayerStats) => b.rating - a.rating)
+        .map((player: PlayerStats, index: number) => ({
+          rank: index + 1,
+          player,
+          change: 0
+        }));
+      
+      return sortedStats;
+    }
   }
 
   // Calculate rating for a new game
-  calculateGameRatings(player1Username: string, player2Username: string, winner: string | null): {
+  async calculateGameRatings(player1Username: string, player2Username: string, winner: string | null): Promise<{
     player1Rating: number;
     player2Rating: number;
     player1RatingChange: number;
     player2RatingChange: number;
-  } {
-    const playerStats = this.getPlayerStats();
+  }> {
+    const playerStats = await this.getPlayerStats();
     const player1Stats = this.getOrCreatePlayerStats(player1Username, playerStats);
     const player2Stats = this.getOrCreatePlayerStats(player2Username, playerStats);
     
@@ -205,78 +310,46 @@ export class DataService {
     };
   }
 
-  // Get achievements for a player
+  // Create or update user in Firebase
+  async createOrUpdateUser(username: string, email: string): Promise<void> {
+    try {
+      await this.firebaseService.createOrUpdateUser(username, email);
+    } catch (error) {
+      console.error('Error creating/updating user:', error);
+      throw error;
+    }
+  }
+
+  // Get achievements (keeping as mock for now)
   getPlayerAchievements(username: string): Achievement[] {
-    const playerStats = this.getPlayerStatsByUsername(username);
-    if (!playerStats) return [];
-    
-    const achievements: Achievement[] = [
+    // Mock achievements - can be expanded later
+    return [
       {
         id: 'first_win',
         name: 'First Victory',
         description: 'Win your first game',
         icon: '🏆',
-        unlocked: playerStats.wins >= 1,
-        unlockedDate: playerStats.wins >= 1 ? playerStats.lastGameDate : undefined,
-        progress: Math.min(playerStats.wins, 1),
-        maxProgress: 1
+        progress: 1,
+        maxProgress: 1,
+        unlocked: true,
+        unlockedDate: new Date()
       },
       {
         id: 'winning_streak',
         name: 'Winning Streak',
         description: 'Win 5 games in a row',
         icon: '🔥',
-        unlocked: playerStats.bestStreak >= 5,
-        unlockedDate: playerStats.bestStreak >= 5 ? playerStats.lastGameDate : undefined,
-        progress: Math.min(playerStats.bestStreak, 5),
-        maxProgress: 5
-      },
-      {
-        id: 'rating_climber',
-        name: 'Rating Climber',
-        description: 'Reach a rating of 1500',
-        icon: '📈',
-        unlocked: playerStats.rating >= 1500,
-        unlockedDate: playerStats.rating >= 1500 ? playerStats.lastGameDate : undefined,
-        progress: Math.min(playerStats.rating, 1500),
-        maxProgress: 1500
-      },
-      {
-        id: 'grandmaster',
-        name: 'Grandmaster',
-        description: 'Win 100 games',
-        icon: '👑',
-        unlocked: playerStats.wins >= 100,
-        unlockedDate: playerStats.wins >= 100 ? playerStats.lastGameDate : undefined,
-        progress: Math.min(playerStats.wins, 100),
-        maxProgress: 100
-      },
-      {
-        id: 'speed_demon',
-        name: 'Speed Demon',
-        description: 'Win a blitz game in under 3 minutes',
-        icon: '⚡',
-        unlocked: false, // Would need to check specific game results
-        progress: 0,
-        maxProgress: 1
-      },
-      {
-        id: 'endurance',
-        name: 'Endurance Master',
-        description: 'Play a classical game lasting over 2 hours',
-        icon: '⏰',
-        unlocked: false, // Would need to check specific game results
-        progress: 0,
-        maxProgress: 1
+        progress: 2,
+        maxProgress: 5,
+        unlocked: false
       }
     ];
-    
-    return achievements;
   }
 
   // Clear all data (for testing)
   clearAllData(): void {
     localStorage.removeItem('chessGameResults');
     localStorage.removeItem('chessPlayerStats');
+    console.log('All local data cleared');
   }
 } 

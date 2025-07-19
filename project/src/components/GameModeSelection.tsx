@@ -135,17 +135,14 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {TIME_CONTROLS.map((mode) => {
               const IconComponent = mode.icon;
+              const isSelected = selectedMode === mode.id;
               return (
                 <div
                   key={mode.id}
-                  className={`relative cursor-pointer transition-all duration-200 ${
-                    selectedMode === mode.id
-                      ? 'ring-4 ring-amber-500 scale-105'
-                      : 'hover:scale-105'
-                  }`}
+                  className="relative cursor-pointer transition-all duration-200"
                   onClick={() => setSelectedMode(mode.id)}
                 >
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400 transition-colors">
+                  <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${isSelected ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className={`p-3 rounded-full ${mode.color} text-white`}>
@@ -156,24 +153,18 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
                           <p className="text-sm text-gray-600 dark:text-gray-300">{mode.time}</p>
                         </div>
                       </div>
-
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 text-sm">{mode.description}</p>
                   </div>
                 </div>
               );
             })}
-            
             {/* Custom Timer Card */}
             <div
-              className={`relative cursor-pointer transition-all duration-200 ${
-                selectedMode === 'custom'
-                  ? 'ring-4 ring-amber-500 scale-105'
-                  : 'hover:scale-105'
-              }`}
+              className="relative cursor-pointer transition-all duration-200"
               onClick={() => setShowCustomTimer(true)}
             >
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400 transition-colors">
+              <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${selectedMode === 'custom' ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="p-3 rounded-full bg-purple-500 hover:bg-purple-600 text-white">
@@ -191,7 +182,6 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
                       </p>
                     </div>
                   </div>
-
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">Create your own time control</p>
               </div>
@@ -208,21 +198,16 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
               {BOARD_THEMES.map((theme) => (
                 <div
                   key={theme.id}
-                  className={`relative cursor-pointer transition-all duration-200 ${
-                    selectedBoardTheme === theme.id
-                      ? 'ring-4 ring-amber-500 scale-105'
-                      : 'hover:scale-105'
-                  }`}
+                  className="relative cursor-pointer transition-all duration-200"
                   onClick={() => setSelectedBoardTheme(theme.id)}
                 >
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400 transition-colors">
+                  <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 transition-colors ${selectedBoardTheme === theme.id ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
                     <div className="flex flex-col items-center space-y-3">
                       <div className={`w-16 h-16 rounded-lg ${theme.preview} border-2 border-gray-300 dark:border-gray-600`}></div>
                       <div className="text-center">
                         <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{theme.name}</h3>
                         <p className="text-xs text-gray-600 dark:text-gray-300">{theme.description}</p>
                       </div>
-
                     </div>
                   </div>
                 </div>

@@ -19,6 +19,7 @@ interface GameProps {
   customTimeControl?: { minutes: number; seconds: number; increment: number; name: string };
   whitePlayerName: string;
   blackPlayerName: string;
+  showSuggestions?: boolean;
 }
 
 export const Game: React.FC<GameProps> = ({ 
@@ -32,7 +33,8 @@ export const Game: React.FC<GameProps> = ({
   opponentName,
   customTimeControl,
   whitePlayerName,
-  blackPlayerName
+  blackPlayerName,
+  showSuggestions = false
 }) => {
   const [chess, setChess] = useState(() => new Chess());
   const [gameKey, setGameKey] = useState(0);
@@ -65,6 +67,7 @@ export const Game: React.FC<GameProps> = ({
     console.log('Setting timer to:', initialTime, 'seconds');
     setWhiteTime(initialTime);
     setBlackTime(initialTime);
+    setGameStartTime(Date.now()); // Reset game start time when time control changes
   }, [customTimeControl, timeControl]);
   const [activeColor, setActiveColor] = useState<'w' | 'b'>('w');
   const [timerInterval, setTimerInterval] = useState<number | null>(null);
@@ -74,7 +77,12 @@ export const Game: React.FC<GameProps> = ({
   const [gameStartTime, setGameStartTime] = useState<number>(Date.now());
   const dataService = DataService.getInstance();
 
-  const saveGameResult = useCallback((winner: string | null, reason: string) => {
+  // Reset game start time when component mounts
+  useEffect(() => {
+    setGameStartTime(Date.now());
+  }, []);
+
+  const saveGameResult = useCallback(async (winner: string | null, reason: string) => {
     const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
     const moves = chess.history().length;
     const pgn = chess.pgn();
@@ -83,7 +91,7 @@ export const Game: React.FC<GameProps> = ({
     const opponentPlayerName = opponentName || 'Computer';
     
     // Calculate ratings
-    const ratings = dataService.calculateGameRatings(username, opponentPlayerName, winner);
+    const ratings = await dataService.calculateGameRatings(username, opponentPlayerName, winner);
     
     const gameResult: GameResult = {
       id: `game_${Date.now()}`,
@@ -102,8 +110,12 @@ export const Game: React.FC<GameProps> = ({
       player2RatingChange: ratings.player2RatingChange
     };
     
-    dataService.saveGameResult(gameResult);
-    console.log('Game result saved:', gameResult);
+    try {
+      await dataService.saveGameResult(gameResult);
+      console.log('Game result saved to Firebase:', gameResult);
+    } catch (error) {
+      console.error('Error saving game result:', error);
+    }
   }, [username, opponentName, timeControl, chess, gameStartTime, dataService]);
 
   const handleMove = useCallback((move: { from: string; to: string; promotion?: string }) => {
@@ -137,6 +149,7 @@ export const Game: React.FC<GameProps> = ({
     setTimeOut(null);
     setGameOverReason(null);
     setShowGameOverPopup(false);
+    setGameStartTime(Date.now()); // Reset game start time for new game
   }, [timeControl, customTimeControl]);
 
   // Timer effect
@@ -147,7 +160,7 @@ export const Game: React.FC<GameProps> = ({
       const winnerName = winner === 'White' ? username : (opponentName || 'Computer');
       setGameOverReason(`${timeOut} ran out of time! ${winner} wins!`);
       setShowGameOverPopup(true);
-      saveGameResult(winnerName, 'timeout');
+      saveGameResult(winnerName, 'timeout').catch(console.error);
       return;
     }
     if (chess.isGameOver()) {
@@ -157,15 +170,15 @@ export const Game: React.FC<GameProps> = ({
         const winnerName = winner === 'White' ? username : (opponentName || 'Computer');
         setGameOverReason(`Checkmate! ${winner} wins!`);
         setShowGameOverPopup(true);
-        saveGameResult(winnerName, 'checkmate');
+        saveGameResult(winnerName, 'checkmate').catch(console.error);
       } else if (chess.isStalemate()) {
         setGameOverReason('Stalemate! Game is a draw.');
         setShowGameOverPopup(true);
-        saveGameResult(null, 'stalemate');
+        saveGameResult(null, 'stalemate').catch(console.error);
       } else if (chess.isDraw()) {
         setGameOverReason('Draw! Game ended in a draw.');
         setShowGameOverPopup(true);
-        saveGameResult(null, 'draw');
+        saveGameResult(null, 'draw').catch(console.error);
       }
       return;
     }
@@ -340,6 +353,7 @@ export const Game: React.FC<GameProps> = ({
                   isFlipped={isFlipped}
                   selectedSquare={selectedSquare}
                   boardTheme={boardTheme}
+                  showSuggestions={showSuggestions}
                 />
               </div>
               {/* White timer below board */}
