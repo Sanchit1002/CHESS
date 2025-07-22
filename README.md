@@ -1,80 +1,68 @@
-**♟️ Real-Time Multiplayer Chess Web Application**
+♟️ Real-Time Multiplayer Chess Web Application
+🎯 Overview
+An immersive, feature-rich real-time multiplayer chess platform built with modern web technologies.
+It features a sleek UI, robust chess logic, and real-time synchronization to deliver an engaging, scalable experience across all devices.
 
-**🎯 Overview**
 
-An immersive, feature-rich real-time multiplayer chess platform built with modern web technologies. 
-It combines a sleek UI, solid chess logic, and real-time syncing to deliver an engaging and scalable cross-device experience.
 
-**[Deployed with Netlify]**
-
-(https://www.netlify.com/img/global/badges/netlify-dark.svg)]
-
-**🌟 Why This Project?**
-
-This application was built to showcase:
+🌟 Why This Project?
+This project was built to demonstrate:
 
 ⚡ Real-time data handling using Firebase Firestore
 
-🎮 Multiplayer logic & synchronization with chess.js
+🎮 Multiplayer synchronization using chess.js
 
-🧱 Scalable full-stack architecture using modern tools developing this chess app challenged every layer—from game logic to UX—resulting in a truly modern, polished solution.
--------------------------------------------------------------------------------
+🧱 Scalable full-stack architecture leveraging modern tools
 
-**✨ Features at a Glance**
+Developing this chess app challenged every layer—from game logic to UX—resulting in a polished, production-ready web application.
 
-**✅ Real-Time Multiplayer:**
-Play live chess matches with seamless updates and rule validation.
+✨ Features at a Glance
+✅ Real-Time Multiplayer:
+Play live chess games with seamless state updates and accurate rule enforcement.
 
-**📊 Dynamic Leaderboard:**
-Track ELO ratings, win/loss stats, and match history in real-time.
+📊 Dynamic Leaderboard:
+Track ELO ratings, win/loss stats, and match history in real time.
 
-**👥 Friends System:**
-Add/accept friends, check online status, and invite them to play.
+👥 Friends System:
+Add friends, accept requests, check online status, and invite them to a match.
 
-**💬 In-Game Chat:**
-Chat with your opponent during gameplay without leaving the board.
+💬 In-Game Chat:
+Communicate with opponents during gameplay through real-time messaging.
 
-**📜 Game History:**
-Access detailed stats of your past games.
+📜 Game History:
+Access comprehensive stats and summaries of past games.
 
-**🎨 Board Theme Customization:**
-Choose from multiple beautiful board and piece styles.
+🎨 Board Theme Customization:
+Choose from multiple board and piece styles for a personalized experience.
 
-**📱 Fully Responsive UI:**
-Smooth experience across desktop, tablet, and mobile devices.
+📱 Responsive UI:
+Enjoy a smooth, intuitive interface across desktop, tablet, and mobile.
 
-**🔐 Secure Authentication:**
-Sign in safely with Firebase-powered email/password login.
+🔐 Secure Authentication:
+Login/register via Firebase-powered email and password authentication.
 
-**⚙️ Environment Security:**
-All sensitive credentials are protected via .env configuration.
------------------------------------------------------------------------
+⚙️ Environment Security:
+All sensitive credentials are protected using .env configuration.
 
-**🛠️ Tech Stack**
+🛠️ Tech Stack
+🔧 Frontend
+React + TypeScript – Component-based, type-safe UI development
 
-**🔧 Frontend**
+Vite – Ultra-fast development and optimized builds
 
-React + TypeScript – Type-safe, scalable UI
+Tailwind CSS – Utility-first styling for responsive design
 
-Vite – Lightning-fast builds & HMR
+React Router – Seamless single-page navigation
 
-Tailwind CSS – Utility-first, responsive design
+Lucide Icons – Lightweight and elegant icon set
 
-React Router – Smooth in-app navigation
+🔌 Backend
+Firebase Firestore – Real-time NoSQL database for users, games, chat, and leaderboard
 
-Lucide Icons – Clean, modern iconography
+Firebase Authentication – Secure, easy-to-use authentication system
 
-**🔌 Backend**
+♟️ Game Logic
+chess.js – Handles full chess rules, FEN/PGN parsing, move validation, and game state tracking
 
-Firebase Firestore – Real-time NoSQL database
-
-Firebase Authentication – Secure user auth
-
-**♟️ Game Logic**
-
-chess.js – Full chess rules, FEN/Pgn support, validation
-
-**🚀 Deployment**
-
-Netlify – Fast CI/CD for deployment
-
+🚀 Deployment
+Netlify – Fast, reliable CI/CD and frontend hosting
