@@ -6,7 +6,8 @@ An immersive, feature-rich real-time multiplayer chess platform built with moder
 It combines a sleek UI, solid chess logic, and real-time syncing to deliver an engaging and scalable cross-device experience.
 
 **[Deployed with Netlify]**
-(https://www.netlify.com/img/global/badges/netlify-dark.svg)]
+
+(https://sanchitchess.netlify.app/)
 
 
 **🌟 Why This Project?**
@@ -80,6 +81,3 @@ chess.js – Full chess rules, FEN/Pgn support, validation
 **🚀 Deployment**
 
 Netlify – Fast CI/CD for deployment
-
-use only this
-make perfect professional repo
