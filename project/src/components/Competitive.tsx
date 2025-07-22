@@ -72,7 +72,12 @@ export const Competitive: React.FC<CompetitiveProps> = ({ onBack, username }) =>
     
         // Convert to Player format and sort by rating (highest first)
         const realPlayers: Player[] = allPlayerStats
-          .sort((a, b) => b.rating - a.rating) // Sort by rating descending
+          .sort((a, b) => {
+            // Treat undefined, null, or NaN as lowest possible rating
+            const ratingA = (typeof a.rating === 'number' && !isNaN(a.rating)) ? a.rating : -Infinity;
+            const ratingB = (typeof b.rating === 'number' && !isNaN(b.rating)) ? b.rating : -Infinity;
+            return ratingB - ratingA;
+          }) // Sort by rating descending, robust to missing/invalid ratings
           .map((stats, index) => {
             // Calculate seasonal points for each player
             const seasonalPoints = stats.gamesPlayed * 10 + stats.wins * 50 + Math.floor(stats.winRate * 2) + Math.floor(stats.rating / 10);
