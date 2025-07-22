@@ -123,19 +123,28 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   }, [roomId]);
 
   const handleMove = async (move: { from: string; to: string; promotion?: string }) => {
-    console.log('handleMove called', move, 'isSpectator:', isSpectator, 'isMyTurn:', isMyTurn());
     if (isSpectator || !isMyTurn()) return;
     try {
-      const newGame = new Chess(game.fen());
+      // Get the current moves array from Firestore
+      const currentMoves = (roomData?.gameState?.moves && Array.isArray(roomData.gameState.moves))
+        ? [...roomData.gameState.moves]
+        : [];
+
+      // Create a new Chess instance and play all previous moves
+      const newGame = new Chess();
+      currentMoves.forEach((m: string) => newGame.move(m));
+
+      // Make the new move
       const chessMove = newGame.move(move);
-      console.log('Attempting move:', move, 'Result:', chessMove);
-      console.log('New FEN:', newGame.fen(), 'Turn:', newGame.turn());
       if (chessMove) {
+        // Add the new move in SAN format to the moves array
+        currentMoves.push(chessMove.san);
+
         const gameState = {
           fen: newGame.fen(),
           currentPlayer: newGame.turn() === 'w' ? 'white' : 'black',
           status: newGame.isGameOver() ? 'finished' : 'playing',
-          moves: newGame.history(),
+          moves: currentMoves,
           lastMove: { from: move.from, to: move.to }
         };
         await updateDoc(doc(db, 'gameRooms', roomId), {
