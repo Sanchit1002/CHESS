@@ -50,7 +50,7 @@ const BOARD_THEMES = [
   {
     id: 'blue',
     name: 'Blue',
-    description: 'Cool blue tones',
+    description: 'Cool blue tones ocean',
     preview: 'bg-gradient-to-br from-blue-200 to-blue-800'
   },
   {
