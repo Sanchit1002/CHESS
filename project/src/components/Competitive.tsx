@@ -341,7 +341,7 @@ export const Competitive: React.FC<CompetitiveProps> = ({ onBack, username }) =>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Draws</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-600">{currentPlayer.winRate.toFixed(1)}%</div>
+                    <div className="text-3xl font-bold text-blue-600">{typeof currentPlayer.winRate === 'number' && !isNaN(currentPlayer.winRate) ? currentPlayer.winRate.toFixed(1) : '0.0'}%</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">Win Rate</div>
                   </div>
                 </div>
@@ -431,7 +431,7 @@ export const Competitive: React.FC<CompetitiveProps> = ({ onBack, username }) =>
                             {player.gamesPlayed}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                            {player.winRate.toFixed(1)}%
+                            {typeof player.winRate === 'number' && !isNaN(player.winRate) ? player.winRate.toFixed(1) : '0.0'}%
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">

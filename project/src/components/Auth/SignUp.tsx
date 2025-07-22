@@ -53,10 +53,13 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitchToSignIn, isLo
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         username,
         email,
-        createdAt: new Date(),
-        elo: 1200,
-        achievements: [],
-        stats: { wins: 0, losses: 0, draws: 0 }
+        username_lower: username.toLowerCase(),
+        email_lower: email.toLowerCase(),
+        achievements: {
+          createdAt: new Date(),
+          elo: 1200
+        },
+        stats: { wins: 0, losses: 0, draws: 0, elo: 1200 }
       });
       onSignUp(username, email, password); // Notify parent for navigation
     } catch (error: any) {

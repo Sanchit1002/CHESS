@@ -72,3 +72,17 @@ export interface Achievement {
   progress: number;
   maxProgress: number;
 }
+
+export interface Friend {
+  uid: string; // Firestore UID
+  username: string;
+  status: 'online' | 'offline' | 'playing';
+  lastSeen?: Date;
+}
+
+export interface FriendRequest {
+  from: string; // UID of sender
+  to: string;   // UID of recipient
+  status: 'pending' | 'accepted' | 'rejected';
+  timestamp: Date;
+}

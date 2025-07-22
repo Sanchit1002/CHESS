@@ -12,7 +12,7 @@ import { Competitive } from './components/Competitive';
 import { TestData } from './components/TestData';
 import { Moon, Sun } from 'lucide-react';
 
-type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard';
+type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv';
 
 interface User {
   username: string;
@@ -390,6 +390,8 @@ function App() {
             isLoading={isLoading}
           />
         );
+      case 'testEnv':
+        return <TestEnv />;
       case 'game':
         return user ? (
           (() => {

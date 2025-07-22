@@ -14,7 +14,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { GameResult, PlayerStats } from '../types';
+import { GameResult, PlayerStats, Friend, FriendRequest } from '../types';
 
 export interface FirebaseGameResult {
   id?: string;
@@ -438,5 +438,115 @@ export class FirebaseService {
       console.error('Error creating/updating user in Firebase:', error);
       throw error;
     }
+  }
+
+  // --- FRIENDS SYSTEM ---
+
+  // Send a friend request (from senderUid to recipientUid)
+  async sendFriendRequest(senderUid: string, recipientUid: string): Promise<void> {
+    const recipientRef = doc(db, 'users', recipientUid);
+    const recipientDoc = await getDoc(recipientRef);
+    if (!recipientDoc.exists()) throw new Error('Recipient user not found');
+    const data = recipientDoc.data();
+    // Initialize friendRequests if missing
+    const requests: FriendRequest[] = Array.isArray(data.friendRequests) ? data.friendRequests : [];
+    // Prevent duplicate requests
+    if (requests.some(r => r.from === senderUid && r.status === 'pending')) return;
+    requests.push({ from: senderUid, to: recipientUid, status: 'pending', timestamp: new Date() });
+    await updateDoc(recipientRef, { friendRequests: requests });
+  }
+
+  // Accept a friend request (recipientUid accepts senderUid)
+  async acceptFriendRequest(recipientUid: string, senderUid: string): Promise<void> {
+    const recipientRef = doc(db, 'users', recipientUid);
+    const senderRef = doc(db, 'users', senderUid);
+    const recipientDoc = await getDoc(recipientRef);
+    const senderDoc = await getDoc(senderRef);
+    if (!recipientDoc.exists() || !senderDoc.exists()) throw new Error('User not found');
+    // Update recipient's friendRequests
+    let requests: FriendRequest[] = Array.isArray(recipientDoc.data().friendRequests) ? recipientDoc.data().friendRequests : [];
+    requests = requests.map(r => r.from === senderUid ? { ...r, status: 'accepted' } : r);
+    await updateDoc(recipientRef, { friendRequests: requests });
+    // Add each other as friends
+    let recipientFriends: string[] = Array.isArray(recipientDoc.data().friends) ? recipientDoc.data().friends : [];
+    let senderFriends: string[] = Array.isArray(senderDoc.data().friends) ? senderDoc.data().friends : [];
+    if (Array.isArray(recipientFriends) && !recipientFriends.includes(senderUid)) recipientFriends.push(senderUid);
+    if (Array.isArray(senderFriends) && !senderFriends.includes(recipientUid)) senderFriends.push(recipientUid);
+    await updateDoc(recipientRef, { friends: recipientFriends });
+    await updateDoc(senderRef, { friends: senderFriends });
+  }
+
+  // Reject a friend request (recipientUid rejects senderUid)
+  async rejectFriendRequest(recipientUid: string, senderUid: string): Promise<void> {
+    const recipientRef = doc(db, 'users', recipientUid);
+    const recipientDoc = await getDoc(recipientRef);
+    if (!recipientDoc.exists()) throw new Error('Recipient user not found');
+    let requests: FriendRequest[] = Array.isArray(recipientDoc.data().friendRequests) ? recipientDoc.data().friendRequests : [];
+    requests = requests.map(r => r.from === senderUid ? { ...r, status: 'rejected' } : r);
+    await updateDoc(recipientRef, { friendRequests: requests });
+  }
+
+  // Get friends for a user (by UID)
+  async getFriends(uid: string): Promise<Friend[]> {
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) return [];
+    const friendUids: string[] = Array.isArray(userDoc.data().friends) ? userDoc.data().friends : [];
+    // Fetch friend user data
+    const friends: Friend[] = [];
+    for (const friendUid of friendUids) {
+      const friendRef = doc(db, 'users', friendUid);
+      const friendDoc = await getDoc(friendRef);
+      if (friendDoc.exists()) {
+        const d = friendDoc.data();
+        friends.push({
+          uid: friendUid,
+          username: d.username,
+          status: 'offline', // You can enhance this with real status
+          lastSeen: d.lastSeen ? d.lastSeen.toDate?.() : undefined
+        });
+      }
+    }
+    return friends;
+  }
+
+  // Get friend requests for a user (by UID)
+  async getFriendRequests(uid: string): Promise<FriendRequest[]> {
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) return [];
+    return userDoc.data().friendRequests || [];
+  }
+
+  // Get all users (for searching by username)
+  async getAllUsers(): Promise<{ uid: string, username: string }[]> {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    const users: { uid: string, username: string }[] = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      users.push({ uid: docSnap.id, username: data.username });
+    });
+    return users;
+  }
+
+  // Search for a user by username or email (case-insensitive)
+  async findUserByUsernameOrEmail(queryStr: string): Promise<{ uid: string, username: string } | null> {
+    const usersRef = collection(db, 'users');
+    const lower = queryStr.toLowerCase();
+    // Try username_lower
+    let q = query(usersRef, where('username_lower', '==', lower));
+    let snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      // Try email_lower
+      q = query(usersRef, where('email_lower', '==', lower));
+      snapshot = await getDocs(q);
+    }
+    if (!snapshot.empty) {
+      const docSnap = snapshot.docs[0];
+      const data = docSnap.data();
+      return { uid: docSnap.id, username: data.username };
+    }
+    return null;
   }
 } 

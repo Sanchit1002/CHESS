@@ -114,12 +114,13 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   }, [roomId]);
 
   const handleMove = async (move: { from: string; to: string; promotion?: string }) => {
+    console.log('handleMove called', move, 'isSpectator:', isSpectator, 'isMyTurn:', isMyTurn());
     if (isSpectator || !isMyTurn()) return;
-    
     try {
       const newGame = new Chess(game.fen());
       const chessMove = newGame.move(move);
-      
+      console.log('Attempting move:', move, 'Result:', chessMove);
+      console.log('New FEN:', newGame.fen(), 'Turn:', newGame.turn());
       if (chessMove) {
         const gameState = {
           fen: newGame.fen(),
@@ -128,7 +129,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           moves: newGame.history(),
           lastMove: { from: move.from, to: move.to }
         };
-
         await updateDoc(doc(db, 'gameRooms', roomId), {
           gameState,
           status: gameState.status
@@ -177,6 +177,11 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     if (game.isStalemate()) return 'Game is a draw by stalemate!';
     return 'Game over!';
   };
+
+  // Debug: log roomData and username to help diagnose move issues
+  console.log('roomData:', roomData, 'username:', username);
+  // Debug: log currentPlayer, getPlayerColor, and isMyTurn to help diagnose turn issues
+  console.log('currentPlayer:', currentPlayer, 'getPlayerColor():', getPlayerColor(), 'isMyTurn:', isMyTurn());
 
   if (loading) {
     return (
@@ -242,25 +247,27 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         )}
 
         {gameStatus === 'playing' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          <div className="w-full max-w-screen-xl mx-auto flex flex-col md:flex-row md:justify-between md:items-start gap-8 px-2">
             {/* Left Column - Game Info */}
-            <div className="space-y-4 order-1 lg:order-1 max-h-[600px] overflow-auto">
+            <div className="space-y-4 max-h-[600px] overflow-auto md:w-[260px] flex-shrink-0 md:mr-1">
               <GameStatus 
                 chess={game}
                 onResetGame={() => {}} // No reset in multiplayer
               />
-              
               <MoveHistory chess={game} />
             </div>
 
             {/* Center Column - Chess Board */}
-            <div className="flex justify-center order-2 lg:order-2">
-              <div className="relative max-w-[480px] w-full aspect-square">
+            <div className="flex justify-center w-[480px] h-[480px] flex-shrink-0 md:ml-4">
+              <div className="relative w-full h-full">
                 <ChessBoard
                   chess={game}
                   onMove={handleMove}
                   isGameOver={game.isGameOver()}
                   boardTheme={roomData?.boardTheme || 'classic'}
+                  isFlipped={getPlayerColor() === 'black'}
+                  isMyTurn={isMyTurn()}
+                  disableDragDrop={true}
                 />
                 {isSpectator && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
@@ -274,7 +281,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
 
             {/* Right Column - Chat */}
-            <div className="space-y-4 order-3 lg:order-3 max-h-[600px] overflow-auto">
+            <div className="space-y-4 max-h-[600px] overflow-auto w-[350px] min-w-[320px] bg-white dark:bg-gray-800 rounded-lg shadow-lg px-2 flex-shrink-0 ml-auto">
               <Chat
                 messages={messages}
                 newMessage={newMessage}

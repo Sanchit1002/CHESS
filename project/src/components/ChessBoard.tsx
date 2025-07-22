@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { ChessPiece } from './ChessPiece';
 
@@ -11,6 +11,8 @@ interface ChessBoardProps {
   selectedSquare?: string | null;
   boardTheme?: string;
   showSuggestions?: boolean;
+  isMyTurn?: boolean;
+  disableDragDrop?: boolean;
 }
 
 const BOARD_THEMES = {
@@ -64,90 +66,159 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   onSquareSelect,
   isGameOver,
   isFlipped = false,
-  selectedSquare = null,
   boardTheme = 'classic',
-  showSuggestions = false
+  showSuggestions = false,
+  isMyTurn = true,
+  disableDragDrop = false
 }) => {
   const [validMoves, setValidMoves] = useState<string[]>([]);
   const [promotionSquare, setPromotionSquare] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null);
   const [animatingMove, setAnimatingMove] = useState<{ from: string; to: string } | null>(null);
   const [hoveredSquare, setHoveredSquare] = useState<string | null>(null);
-  
+  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+
   // Drag and drop state
   const [draggedPiece, setDraggedPiece] = useState<string | null>(null);
   const [dragOverSquare, setDragOverSquare] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // --- IMPROVED CLICK-TO-MOVE AND DRAG-AND-DROP LOGIC ---
+  // Always allow click-to-move as a fallback, even if drag-and-drop fails
+  // Drag-and-drop is robust for both white and black (flipped) boards
+  // Visual feedback for selected piece and valid moves is clear
+
   // Memoize board and theme to prevent unnecessary recalculations
   const board = useMemo(() => chess.board(), [chess]);
   const theme = useMemo(() => BOARD_THEMES[boardTheme as keyof typeof BOARD_THEMES] || BOARD_THEMES.classic, [boardTheme]);
 
-  const handleSquareClick = useCallback((square: string) => {
-    if (isGameOver || isDragging) return;
+  // Clear selection and valid moves whenever the board (FEN) changes
+  useEffect(() => {
+    setSelectedSquare(null);
+    setValidMoves([]);
+  }, [chess.fen()]);
 
+  // --- CLICK-TO-MOVE LOGIC ---
+  const handleSquareClick = useCallback((square: string) => {
+    if (isGameOver || !isMyTurn) return;
     const piece = chess.get(square as any);
     const currentTurn = chess.turn();
-    
-    // If we're in promotion mode
-    if (promotionSquare) {
-      return;
-    }
-
+    // If we're in promotion mode, ignore
+    if (promotionSquare) return;
     // Call the square select callback
-    if (onSquareSelect) {
-      onSquareSelect(square);
-    }
-
+    if (onSquareSelect) onSquareSelect(square);
     if (selectedSquare) {
-      // If clicking on the same square, deselect it
+      // If clicking on the same square, deselect
       if (square === selectedSquare) {
+        setSelectedSquare(null);
         setValidMoves([]);
         return;
       }
-      
       // Try to make a move
       if (validMoves.includes(square)) {
         const move = { from: selectedSquare, to: square };
-        
-        // Animate the move
         setAnimatingMove(move);
-        
-        // Check if this is a pawn promotion
+        // Check for pawn promotion
         const movingPiece = chess.get(selectedSquare as any);
-        if (movingPiece?.type === 'p') {
-          const toRank = parseInt(square[1]);
-          if ((movingPiece.color === 'w' && toRank === 8) || 
-              (movingPiece.color === 'b' && toRank === 1)) {
-            setPromotionSquare(square);
-            setAnimatingMove(null);
-            return;
-          }
-        }
-        
-        // Execute move after animation
-        setTimeout(() => {
-        onMove(move);
-        setLastMove({ from: selectedSquare, to: square });
-        setValidMoves([]);
+        const toRank = parseInt(square[1]);
+        if (movingPiece?.type === 'p' && ((movingPiece.color === 'w' && toRank === 8) || (movingPiece.color === 'b' && toRank === 1))) {
+          setPromotionSquare(square);
           setAnimatingMove(null);
-        }, 150); // Fast animation duration
+          return;
+        }
+        setTimeout(() => {
+          onMove(move);
+          setSelectedSquare(null);
+          setValidMoves([]);
+          setLastMove({ from: selectedSquare, to: square });
+          setAnimatingMove(null);
+        }, 150);
       } else {
-        // If clicking on a different piece of the same color, select that piece instead
+        // If clicking on a different piece of the same color, select that piece
         if (piece && piece.color === currentTurn) {
+          setSelectedSquare(square);
           const moves = chess.moves({ square: square as any, verbose: true });
           setValidMoves(moves.map(move => move.to));
         } else {
-          // If clicking on an empty square or opponent piece, deselect current piece
+          setSelectedSquare(null);
           setValidMoves([]);
         }
       }
     } else if (piece && piece.color === currentTurn) {
       // Select a piece (for the correct turn, regardless of orientation)
+      setSelectedSquare(square);
       const moves = chess.moves({ square: square as any, verbose: true });
       setValidMoves(moves.map(move => move.to));
     }
-  }, [selectedSquare, validMoves, chess, onMove, isGameOver, promotionSquare, onSquareSelect, isDragging]);
+  }, [selectedSquare, validMoves, chess, onMove, isGameOver, promotionSquare, onSquareSelect, isMyTurn]);
+
+  // --- DRAG-AND-DROP LOGIC (ROBUST) ---
+  const handleDragStart = useCallback((e: React.DragEvent, square: string) => {
+    if (disableDragDrop || !isMyTurn) { e.preventDefault(); return; }
+    const piece = chess.get(square as any);
+    if (!piece) { e.preventDefault(); return; }
+    const currentTurn = chess.turn();
+    if (piece.color !== currentTurn) { e.preventDefault(); return; }
+    setDraggedPiece(square);
+    setIsDragging(true);
+    setValidMoves([]);
+    // Set drag image
+    const dragImage = e.currentTarget.querySelector('img');
+    if (dragImage) e.dataTransfer.setDragImage(dragImage, 25, 25);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', square);
+  }, [chess, isGameOver, disableDragDrop, isMyTurn]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, square: string) => {
+    if (disableDragDrop || !isMyTurn || !draggedPiece || isGameOver) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverSquare(square);
+    // Show valid moves for the dragged piece
+    const moves = chess.moves({ square: draggedPiece as any, verbose: true });
+    setValidMoves(moves.map(move => move.to));
+  }, [draggedPiece, chess, isGameOver, disableDragDrop, isMyTurn]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverSquare(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, square: string) => {
+    if (disableDragDrop || !isMyTurn) return;
+    e.preventDefault();
+    if (!draggedPiece || isGameOver) return;
+    const moves = chess.moves({ square: draggedPiece as any, verbose: true });
+    const validTargets = moves.map(move => move.to);
+    if (validTargets.includes(square)) {
+      const move = { from: draggedPiece, to: square };
+      setAnimatingMove(move);
+      const movingPiece = chess.get(draggedPiece as any);
+      const toRank = parseInt(square[1]);
+      if (movingPiece?.type === 'p' && ((movingPiece.color === 'w' && toRank === 8) || (movingPiece.color === 'b' && toRank === 1))) {
+        setPromotionSquare(square);
+        setAnimatingMove(null);
+      } else {
+        setTimeout(() => {
+          onMove(move);
+          setLastMove({ from: draggedPiece, to: square });
+          setAnimatingMove(null);
+        }, 150);
+      }
+    }
+    setDraggedPiece(null);
+    setDragOverSquare(null);
+    setIsDragging(false);
+    setValidMoves([]);
+  }, [draggedPiece, chess, isGameOver, onMove, disableDragDrop, isMyTurn]);
+
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDraggedPiece(null);
+    setDragOverSquare(null);
+    setIsDragging(false);
+    setValidMoves([]);
+  }, []);
 
   const handlePromotion = useCallback((pieceType: string) => {
     if (promotionSquare && selectedSquare) {
@@ -162,112 +233,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       setValidMoves([]);
     }
   }, [promotionSquare, selectedSquare, onMove]);
-
-  // Drag and drop handlers
-  const handleDragStart = useCallback((e: React.DragEvent, square: string) => {
-    if (isGameOver) {
-      e.preventDefault();
-      return;
-    }
-
-    const piece = chess.get(square as any);
-    if (!piece) {
-      e.preventDefault();
-      return;
-    }
-
-    const currentTurn = chess.turn();
-    if (piece.color !== currentTurn) {
-      e.preventDefault();
-      return;
-    }
-
-    setDraggedPiece(square);
-    setIsDragging(true);
-    setValidMoves([]);
-    
-    // Set drag image
-    const dragImage = e.currentTarget.querySelector('img');
-    if (dragImage) {
-      e.dataTransfer.setDragImage(dragImage, 25, 25);
-    }
-    
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', square);
-  }, [chess, isGameOver]);
-
-  const handleDragOver = useCallback((e: React.DragEvent, square: string) => {
-    if (!draggedPiece || isGameOver) return;
-
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverSquare(square);
-
-    // Show valid moves for the dragged piece
-    const moves = chess.moves({ square: draggedPiece as any, verbose: true });
-    setValidMoves(moves.map(move => move.to));
-  }, [draggedPiece, chess, isGameOver]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOverSquare(null);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent, square: string) => {
-    e.preventDefault();
-    
-    if (!draggedPiece || isGameOver) return;
-
-    // Check if the drop is valid
-    const moves = chess.moves({ square: draggedPiece as any, verbose: true });
-    const validTargets = moves.map(move => move.to);
-    
-    if (validTargets.includes(square)) {
-      const move = { from: draggedPiece, to: square };
-      
-      // Animate the move
-      setAnimatingMove(move);
-      
-      // Check if this is a pawn promotion
-      const movingPiece = chess.get(draggedPiece as any);
-      if (movingPiece?.type === 'p') {
-        const toRank = parseInt(square[1]);
-        if ((movingPiece.color === 'w' && toRank === 8) || 
-            (movingPiece.color === 'b' && toRank === 1)) {
-          setPromotionSquare(square);
-          setAnimatingMove(null);
-        } else {
-          // Execute move after animation
-          setTimeout(() => {
-            onMove(move);
-            setLastMove({ from: draggedPiece, to: square });
-            setAnimatingMove(null);
-          }, 150);
-        }
-      } else {
-        // Execute move after animation
-        setTimeout(() => {
-          onMove(move);
-          setLastMove({ from: draggedPiece, to: square });
-          setAnimatingMove(null);
-        }, 150);
-      }
-    }
-
-    // Reset drag state
-    setDraggedPiece(null);
-    setDragOverSquare(null);
-    setIsDragging(false);
-    setValidMoves([]);
-  }, [draggedPiece, chess, isGameOver, onMove]);
-
-  const handleDragEnd = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDraggedPiece(null);
-    setDragOverSquare(null);
-    setIsDragging(false);
-    setValidMoves([]);
-  }, []);
 
   const getSquareColor = useCallback((row: number, col: number): string => {
     const isLight = (row + col) % 2 === 0;
@@ -342,9 +307,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         onDragOver={(e) => handleDragOver(e, square)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, square)}
-        draggable={canSelect || false}
-        onDragStart={canSelect ? (e) => handleDragStart(e, square) : undefined}
-        onDragEnd={canSelect ? handleDragEnd : undefined}
+        draggable={Boolean(disableDragDrop || !isMyTurn ? false : canSelect)}
+        onDragStart={disableDragDrop || !isMyTurn ? undefined : (canSelect ? (e) => handleDragStart(e, square) : undefined)}
+        onDragEnd={disableDragDrop || !isMyTurn ? undefined : (canSelect ? handleDragEnd : undefined)}
       >
         {piece && !isDraggedFrom && !isAnimatingFrom && (
           <ChessPiece
@@ -352,7 +317,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             isSelected={isSelected}
             onMouseDown={() => {}}
             draggable={false}
-            isAnimating={isAnimatingTo}
+            isAnimating={!!isAnimatingTo}
           />
         )}
         {/* Valid move indicator - only show if suggestions enabled */}
@@ -397,7 +362,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         )}
       </div>
     );
-  }, [board, selectedSquare, validMoves, lastMove, theme, handleSquareClick, promotionSquare, handlePromotion, chess, hoveredSquare, animatingMove, isGameOver, handleDragOver, handleDragLeave, handleDrop, handleDragStart, handleDragEnd, draggedPiece, dragOverSquare]);
+  }, [board, selectedSquare, validMoves, lastMove, theme, handleSquareClick, promotionSquare, handlePromotion, chess, hoveredSquare, animatingMove, isGameOver, handleDragOver, handleDragLeave, handleDrop, handleDragStart, handleDragEnd, draggedPiece, dragOverSquare, disableDragDrop, isMyTurn]);
 
   const renderBoard = useCallback(() => {
     const rows = isFlipped ? Array.from({ length: 8 }, (_, i) => 7 - i) : Array.from({ length: 8 }, (_, i) => i);

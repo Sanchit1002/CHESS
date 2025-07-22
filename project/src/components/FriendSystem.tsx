@@ -1,31 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, MessageSquare, Sword, ArrowLeft, Search, UserCheck } from 'lucide-react';
-
-interface Friend {
-  id: string;
-  username: string;
-  status: 'online' | 'offline' | 'playing';
-  lastSeen?: Date;
-}
-
-interface FriendRequest {
-  id: string;
-  from: string;
-  to: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  timestamp: Date;
-}
+import { Users, UserPlus, MessageSquare, Sword, ArrowLeft, Search } from 'lucide-react';
+import { Friend, FriendRequest } from '../types';
+import { FirebaseService } from '../services/FirebaseService';
+import { getAuth } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface FriendSystemProps {
   onBack: () => void;
   onChallengeFriend: (friendId: string, friendName: string, timeControl: string, boardTheme: string) => void;
   username: string;
+  // Add UID prop for current user
+  uid: string;
 }
 
 export const FriendSystem: React.FC<FriendSystemProps> = ({
   onBack,
   onChallengeFriend,
-  username
+  username,
+  uid
 }) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -36,44 +28,82 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
   const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [challengeTimeControl, setChallengeTimeControl] = useState('blitz');
   const [challengeBoardTheme, setChallengeBoardTheme] = useState('classic');
+  const [loading, setLoading] = useState(false);
+  const firebaseService = FirebaseService.getInstance();
+  const navigate = useNavigate();
 
-  // Mock data for development
+  // Fetch friends and requests from Firestore
   useEffect(() => {
-    const mockFriends: Friend[] = [
-      { id: '1', username: 'Priyam_Chess', status: 'online' },
-      { id: '2', username: 'Sakshi_Chess', status: 'playing' },
-      { id: '3', username: 'Tirtha_Chess', status: 'offline', lastSeen: new Date(Date.now() - 3600000) },
-      { id: '4', username: 'Kabir_Chess', status: 'online' },
-      { id: '5', username: 'Sanchit_Chess', status: 'online' }
-    ];
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [friendsList, requestsList] = await Promise.all([
+          firebaseService.getFriends(uid),
+          firebaseService.getFriendRequests(uid)
+        ]);
+        setFriends(friendsList);
+        setFriendRequests(requestsList.filter((r: FriendRequest) => r.status === 'pending'));
+      } catch (error) {
+        console.error('Error loading friends:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [uid]);
 
-    const mockRequests: FriendRequest[] = [
-      { id: '1', from: 'new_player', to: username, status: 'pending', timestamp: new Date() }
-    ];
-
-    setFriends(mockFriends);
-    setFriendRequests(mockRequests);
-  }, [username]);
-
-  const handleAddFriend = () => {
+  // Add friend by username or email
+  const handleAddFriend = async () => {
     if (newFriendUsername.trim()) {
-      // In a real app, this would send a friend request to the server
-      console.log(`Sending friend request to ${newFriendUsername}`);
-      setNewFriendUsername('');
-      setShowAddFriend(false);
+      setLoading(true);
+      try {
+        // Search by username or email
+        const found = await firebaseService.findUserByUsernameOrEmail(newFriendUsername.trim());
+        if (!found) {
+          alert('User not found');
+        } else if (found.uid === uid) {
+          alert('You cannot add yourself as a friend.');
+        } else {
+          await firebaseService.sendFriendRequest(uid, found.uid);
+          alert('Friend request sent!');
+        }
+      } catch (error) {
+        alert('Error sending friend request.');
+      } finally {
+        setNewFriendUsername('');
+        setShowAddFriend(false);
+        setLoading(false);
+      }
     }
   };
 
-  const handleAcceptRequest = (requestId: string) => {
-    setFriendRequests(prev => prev.filter(req => req.id !== requestId));
-    // In a real app, this would accept the friend request
-    console.log(`Accepted friend request ${requestId}`);
+  // Accept friend request
+  const handleAcceptRequest = async (request: FriendRequest) => {
+    setLoading(true);
+    try {
+      await firebaseService.acceptFriendRequest(uid, request.from);
+      setFriendRequests(prev => prev.filter(r => r.from !== request.from));
+      // Optionally refresh friends
+      const friendsList = await firebaseService.getFriends(uid);
+      setFriends(friendsList);
+    } catch (error) {
+      alert('Error accepting friend request.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRejectRequest = (requestId: string) => {
-    setFriendRequests(prev => prev.filter(req => req.id !== requestId));
-    // In a real app, this would reject the friend request
-    console.log(`Rejected friend request ${requestId}`);
+  // Reject friend request
+  const handleRejectRequest = async (request: FriendRequest) => {
+    setLoading(true);
+    try {
+      await firebaseService.rejectFriendRequest(uid, request.from);
+      setFriendRequests(prev => prev.filter(r => r.from !== request.from));
+    } catch (error) {
+      alert('Error rejecting friend request.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChallenge = (friend: Friend) => {
@@ -83,15 +113,32 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
 
   const sendChallenge = () => {
     if (selectedFriend) {
-      onChallengeFriend(selectedFriend.id, selectedFriend.username, challengeTimeControl, challengeBoardTheme);
+      onChallengeFriend(selectedFriend.uid, selectedFriend.username, challengeTimeControl, challengeBoardTheme);
       setShowChallengeModal(false);
       setSelectedFriend(null);
     }
   };
 
-  const filteredFriends = friends.filter(friend =>
+  const handleMessageFriend = (friend: Friend) => {
+    navigate(`/chat/${friend.uid}`);
+  };
+
+  // Defensive: always use an array for friends
+  const safeFriends = Array.isArray(friends) ? friends : [];
+  const filteredFriends = safeFriends.filter(friend =>
     friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // If no friends, show dummy data for demo
+  const displayFriends = friends.length === 0 ? [
+    { uid: '1', username: 'Tirtha', status: 'online' as 'online' },
+    { uid: '2', username: 'Kabir', status: 'playing' as 'playing' },
+    { uid: '3', username: 'Sanchit', status: 'playing' as 'playing' },
+    { uid: '4', username: 'Savi', status: 'online' as 'online' },
+    { uid: '5', username: 'Adarsh', status: 'playing' as 'playing' },
+    { uid: '6', username: 'Nishant', status: 'playing' as 'playing' },
+    { uid: '7', username: 'Madhur', status: 'online' as 'online' }
+  ] : friends;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -177,8 +224,8 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8 border-2 border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-bold text-amber-900 dark:text-amber-300 mb-4">Friend Requests</h3>
               <div className="space-y-3">
-                {friendRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                {friendRequests.map((request: FriendRequest) => (
+                  <div key={request.from + request.to} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-100">{request.from}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -187,13 +234,13 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
                     </div>
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleAcceptRequest(request.id)}
+                        onClick={() => handleAcceptRequest(request)}
                         className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
                       >
                         Accept
                       </button>
                       <button
-                        onClick={() => handleRejectRequest(request.id)}
+                        onClick={() => handleRejectRequest(request)}
                         className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
                       >
                         Reject
@@ -224,14 +271,14 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
               </div>
             </div>
 
-            {filteredFriends.length === 0 ? (
+            {displayFriends.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">No friends found</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredFriends.map((friend) => (
-                  <div key={friend.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                {displayFriends.map((friend: Friend) => (
+                  <div key={friend.uid} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className={`w-3 h-3 rounded-full ${getStatusColor(friend.status)}`}></div>
                       <div>
@@ -250,7 +297,10 @@ export const FriendSystem: React.FC<FriendSystemProps> = ({
                         <Sword size={14} />
                         <span>Challenge</span>
                       </button>
-                      <button className="flex items-center space-x-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors">
+                      <button
+                        onClick={() => handleMessageFriend(friend)}
+                        className="flex items-center space-x-1 px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                      >
                         <MessageSquare size={14} />
                         <span>Message</span>
                       </button>
