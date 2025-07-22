@@ -1,5 +1,7 @@
 **♟️ Real-Time Multiplayer Chess Web Application**
+
 **🎯 Overview**
+
 An immersive, feature-rich real-time multiplayer chess platform built with modern web technologies. It combines a sleek UI, solid chess logic, and real-time syncing to deliver an engaging and scalable cross-device experience.
 
 **[Deployed with Netlify]**
