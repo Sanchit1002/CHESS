@@ -55,7 +55,16 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         setRoomData(data);
         
         if (data.gameState) {
-          const newGame = new Chess(data.gameState.fen);
+          // Reconstruct the game using the full move list for accurate move history
+          const newGame = new Chess();
+          if (data.gameState.moves && Array.isArray(data.gameState.moves)) {
+            data.gameState.moves.forEach((move: string) => {
+              newGame.move(move);
+            });
+          } else if (data.gameState.fen) {
+            // fallback: set FEN if no moves array
+            newGame.load(data.gameState.fen);
+          }
           setGame(newGame);
           setCurrentPlayer(data.gameState.currentPlayer || 'white');
           // Start game when 2 players join, or if moves have been made
