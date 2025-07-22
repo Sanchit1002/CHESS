@@ -18,6 +18,7 @@ This application was built to showcase:
 🎮 Multiplayer logic & synchronization with chess.js
 
 🧱 Scalable full-stack architecture using modern tools developing this chess app challenged every layer—from game logic to UX—resulting in a truly modern, polished solution.
+-------------------------------------------------------------------------------
 
 **✨ Features at a Glance**
 
@@ -47,6 +48,7 @@ Sign in safely with Firebase-powered email/password login.
 
 **⚙️ Environment Security:**
 All sensitive credentials are protected via .env configuration.
+-----------------------------------------------------------------------
 
 **🛠️ Tech Stack**
 
