@@ -257,33 +257,33 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
-      <div className="w-full max-w-5xl mx-auto p-4 relative">
-        {/* Game Over Modal */}
-        {showGameOverModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center border-4 border-amber-400 animate-pop">
-              {getGameOverMessage().icon}
-              <h2 className={`text-3xl font-extrabold mb-2 ${getGameOverMessage().color}`}>{getGameOverMessage().msg}</h2>
-              <p className="text-lg text-gray-700 dark:text-gray-200 mb-6">{chess.isCheckmate() ? 'Checkmate' : chess.isStalemate() ? 'Stalemate' : chess.isDraw() ? 'Draw' : 'Game Over'}</p>
-              <div className="flex gap-4">
-                <button
-                  onClick={handlePlayAgain}
-                  className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow transition-all text-lg"
-                >
-                  Play Again
-                </button>
-                <button
-                  onClick={onBack}
-                  className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold rounded-lg shadow transition-all text-lg"
-                >
-                  Back to Menu
-                </button>
-              </div>
+      {console.log('showGameOverModal:', showGameOverModal)}
+      {/* Game Over Modal (always rendered at top level) */}
+      {showGameOverModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center border-4 border-amber-400 animate-pop">
+            {getGameOverMessage().icon}
+            <h2 className={`text-3xl font-extrabold mb-2 ${getGameOverMessage().color}`}>{getGameOverMessage().msg}</h2>
+            <p className="text-lg text-gray-700 dark:text-gray-200 mb-6">{chess.isCheckmate() ? 'Checkmate' : chess.isStalemate() ? 'Stalemate' : chess.isDraw() ? 'Draw' : 'Game Over'}</p>
+            <div className="flex gap-4">
+              <button
+                onClick={handlePlayAgain}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow transition-all text-lg"
+              >
+                Play Again
+              </button>
+              <button
+                onClick={onBack}
+                className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-900 font-bold rounded-lg shadow transition-all text-lg"
+              >
+                Back to Menu
+              </button>
             </div>
           </div>
-        )}
-        {/* Dim background when modal is open */}
-        <div className={showGameOverModal ? 'pointer-events-none blur-sm select-none' : ''}>
+        </div>
+      )}
+      {/* Main content, blurred and disabled when modal is open */}
+      <div className={showGameOverModal ? 'pointer-events-none blur-sm select-none' : ''}>
           <button onClick={onBack} className="mb-4 px-4 py-2 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600">Back</button>
           <h2 className="text-2xl font-bold mb-2 text-center text-slate-900 dark:text-amber-200">Play vs Bot</h2>
           <p className="text-center mb-4 text-slate-700 dark:text-slate-200">You are playing as <span className="font-bold">{playerColor === 'w' ? 'White' : 'Black'}</span></p>
