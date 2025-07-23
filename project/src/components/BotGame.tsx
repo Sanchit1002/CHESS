@@ -361,7 +361,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
               {isBotThinking && (
                 <div className="mt-4 text-center text-amber-600 dark:text-amber-300 animate-pulse">Bot is thinking...</div>
               )}
-              {chess.isGameOver() && (
+              {chess.isGameOver() && !showGameOverModal && (
                 <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
               )}
               {showSuggestion && isMyTurn && topMoves && topMoves.length > 0 && (
