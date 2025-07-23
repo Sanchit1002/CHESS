@@ -11,8 +11,9 @@ import { Analytics } from './components/Analytics';
 import { Competitive } from './components/Competitive';
 import { TestData } from './components/TestData';
 import { Moon, Sun } from 'lucide-react';
+import { BotGame } from './components/BotGame';
 
-type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv';
+type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv' | 'botGame';
 
 interface User {
   username: string;
@@ -89,6 +90,12 @@ function App() {
     color: 'white' | 'black' | 'random' = 'white',
     opponent: string = ''
   ) => {
+    if (timeControl === 'bot') {
+      setSelectedBoardTheme(boardTheme);
+      setSelectedColor(color);
+      setCurrentState('botGame');
+      return;
+    }
     if (typeof timeControl === 'string') {
       setSelectedTimeControl(timeControl);
       setCustomTimeControl(undefined);
@@ -392,6 +399,14 @@ function App() {
         );
       case 'testEnv':
         return <TestEnv />;
+      case 'botGame':
+        return (
+          <BotGame
+            boardTheme={selectedBoardTheme}
+            color={selectedColor}
+            onBack={switchToGameMode}
+          />
+        );
       case 'game':
         return user ? (
           (() => {

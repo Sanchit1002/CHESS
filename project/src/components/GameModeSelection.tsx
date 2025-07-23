@@ -40,6 +40,15 @@ const TIME_CONTROLS = [
   }
 ];
 
+const BOT_MODE = {
+  id: 'bot',
+  name: 'Play vs Bot',
+  time: 'AI Opponent',
+  description: 'Play against a computer chess engine',
+  icon: Play,
+  color: 'bg-amber-500 hover:bg-amber-600'
+};
+
 const BOARD_THEMES = [
   {
     id: 'classic',
@@ -99,6 +108,8 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
     if (selectedMode) {
       if (selectedMode === 'custom' && customTimeControl) {
         onStartGame(customTimeControl, selectedBoardTheme, selectedColor);
+      } else if (selectedMode === 'bot') {
+        onStartGame('bot', selectedBoardTheme, selectedColor);
       } else {
         onStartGame(selectedMode, selectedBoardTheme, selectedColor);
       }
@@ -159,6 +170,26 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
                 </div>
               );
             })}
+            {/* Bot Mode Card */}
+            <div
+              className="relative cursor-pointer transition-all duration-200"
+              onClick={() => setSelectedMode(BOT_MODE.id)}
+            >
+              <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${selectedMode === BOT_MODE.id ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-3 rounded-full ${BOT_MODE.color} text-white`}>
+                      <Play size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{BOT_MODE.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{BOT_MODE.time}</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">{BOT_MODE.description}</p>
+              </div>
+            </div>
             {/* Custom Timer Card */}
             <div
               className="relative cursor-pointer transition-all duration-200"
