@@ -275,6 +275,18 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     setManualGameOver(null);
   };
 
+  // Helper to convert UCI move to SAN
+  const uciToSan = (uciMove: string) => {
+    const tempChess = new Chess(chess.fen());
+    const moveObj = {
+      from: uciMove.substring(0, 2),
+      to: uciMove.substring(2, 4),
+      promotion: uciMove.length > 4 ? uciMove[4] : undefined
+    };
+    const move = tempChess.move(moveObj);
+    return move ? move.san : uciMove;
+  };
+
   // Place debug log here, outside of JSX
   console.log('showGameOverModal:', showGameOverModal);
   return (
@@ -361,7 +373,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           {showSuggestion && isMyTurn && suggestedMove && suggestedMove !== '...' && (
             <div className="mt-2 text-center w-[480px]">
               <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse w-full">
-                Suggested move: {suggestedMove}
+                Suggested move: {uciToSan(suggestedMove)}
               </span>
             </div>
           )}
@@ -381,7 +393,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
                 <ul className="flex flex-row gap-3 justify-center items-center">
                   {topMoves.map((m, i) => (
                     <li key={i} className="flex flex-col items-center">
-                      <span className={`font-mono font-bold px-2 py-1 rounded-lg ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'}`}>{m.move}</span>
+                      <span className={`font-mono font-bold px-2 py-1 rounded-lg ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'}`}>{uciToSan(m.move)}</span>
                       <span className="text-xs text-slate-500 dark:text-amber-200">{m.eval !== null ? (m.eval > 99 ? '#M' : m.eval < -99 ? '#M' : m.eval.toFixed(2)) : '--'}</span>
                     </li>
                   ))}
