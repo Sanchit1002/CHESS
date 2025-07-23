@@ -292,7 +292,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
       {/* Draw and Resign Buttons */}
-      <div className="flex gap-4 mb-4">
+      <div className="flex gap-4 mb-4 justify-center">
         <button
           onClick={handleDraw}
           disabled={chess.isGameOver() || showGameOverModal}
@@ -308,25 +308,25 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           Resign
         </button>
       </div>
-      {/* Main Layout: Controls, Eval bar, Board, Move History */}
-      <div className="flex flex-row items-start justify-center gap-6 w-full max-w-5xl">
-        {/* Controls Column (left of board) */}
-        <div className="flex flex-col items-center w-[480px] mb-4">
-          <div className="w-full flex flex-col gap-4 bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 border border-slate-200 dark:border-slate-700 mb-4">
-            <div className="flex items-center gap-2 justify-between w-full">
+      {/* Main Layout: Controls+Eval, Board, Move History */}
+      <div className="flex flex-row items-start justify-center gap-6 w-full max-w-6xl">
+        {/* Left Column: Controls above Eval Bar */}
+        <div className="flex flex-col items-center">
+          {/* Controls Card */}
+          <div className="bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 mb-4 flex flex-col gap-4 border border-slate-200 dark:border-slate-700 w-60">
+            <div className="flex items-center gap-2">
               <label className="font-semibold text-slate-900 dark:text-amber-200">Bot Difficulty:</label>
               <select
                 value={difficulty}
                 onChange={e => setDifficulty(Number(e.target.value))}
                 className="px-3 py-1 rounded-lg border-2 border-amber-400 bg-white dark:bg-slate-900 text-slate-900 dark:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                style={{ minWidth: '120px' }}
               >
                 {DIFFICULTY_LEVELS.map(level => (
                   <option key={level.value} value={level.value}>{level.label}</option>
                 ))}
               </select>
             </div>
-            <div className="flex items-center gap-2 justify-between w-full">
+            <div className="flex items-center gap-2">
               <label className="font-semibold text-slate-900 dark:text-amber-200">Show Move Suggestion:</label>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -360,7 +360,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
             </div>
           </div>
         </div>
-        {/* Chess Board and Suggestions */}
+        {/* Chess Board */}
         <div className="flex flex-col items-center">
           <ChessBoard
             chess={chess}
@@ -371,24 +371,24 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
             isMyTurn={isMyTurn && !chess.isGameOver()}
           />
           {showSuggestion && isMyTurn && suggestedMove && suggestedMove !== '...' && (
-            <div className="mt-2 text-center w-[480px]">
-              <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse w-full">
+            <div className="mt-2 text-center">
+              <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse">
                 Suggested move: {uciToSan(suggestedMove)}
               </span>
             </div>
           )}
           {showSuggestion && isMyTurn && suggestedMove === '...' && (
-            <div className="mt-2 text-center text-amber-600 dark:text-amber-300 animate-pulse w-[480px]">Calculating suggestion...</div>
+            <div className="mt-2 text-center text-amber-600 dark:text-amber-300 animate-pulse">Calculating suggestion...</div>
           )}
           {isBotThinking && (
-            <div className="mt-4 text-center text-amber-600 dark:text-amber-300 animate-pulse w-[480px]">Bot is thinking...</div>
+            <div className="mt-4 text-center text-amber-600 dark:text-amber-300 animate-pulse">Bot is thinking...</div>
           )}
           {chess.isGameOver() && !showGameOverModal && (
-            <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold w-[480px]">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
+            <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
           )}
           {showSuggestion && isMyTurn && topMoves && topMoves.length > 0 && (
-            <div className="mt-2 text-center w-[480px]">
-              <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-4 py-2 w-full">
+            <div className="mt-2 text-center">
+              <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-4 py-2">
                 <span className="font-semibold text-slate-700 dark:text-amber-200 mr-2">Top 3 moves:</span>
                 <ul className="flex flex-row gap-3 justify-center items-center">
                   {topMoves.map((m, i) => (
