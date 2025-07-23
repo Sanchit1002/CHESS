@@ -56,16 +56,27 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     // eslint-disable-next-line
   }, [playerColor]);
 
+  const isMyTurn = chess.turn() === playerColor;
+
   // Handle user move
   const handleMove = (move: { from: string; to: string; promotion?: string }) => {
+    if (!isMyTurn || chess.isGameOver()) return; // Only allow user move on their turn
     const newChess = new Chess(chess.fen());
     const result = newChess.move(move);
     if (result) {
       setChess(newChess);
       setSuggestedMove(null); // Clear suggestion after move
-      setTimeout(() => makeBotMove(), 300);
+      // Do NOT call makeBotMove here; let useEffect handle it
     }
   };
+
+  // Bot move effect: trigger bot move when it's the bot's turn
+  useEffect(() => {
+    if (!isMyTurn && !chess.isGameOver()) {
+      makeBotMove();
+    }
+    // eslint-disable-next-line
+  }, [chess.fen(), isMyTurn]);
 
   // Ask Stockfish for the best move (bot)
   const makeBotMove = () => {
@@ -138,8 +149,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
       }
     };
   };
-
-  const isMyTurn = chess.turn() === playerColor;
 
   useEffect(() => {
     if (showSuggestion && isMyTurn && !chess.isGameOver()) {
