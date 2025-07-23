@@ -228,8 +228,10 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
 
   // Show modal when game is over
   useEffect(() => {
+    console.log('Checking game over:', chess.isGameOver(), chess.fen());
     if (chess.isGameOver()) {
       setShowGameOverModal(true);
+      console.log('Game over modal should show!');
     }
   }, [chess.fen()]);
 
@@ -261,6 +263,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
       {/* Game Over Modal (always rendered at top level) */}
       {showGameOverModal && (
+        (() => { console.log('Rendering modal!'); return null; })(),
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center border-4 border-amber-400 animate-pop">
             {getGameOverMessage().icon}
