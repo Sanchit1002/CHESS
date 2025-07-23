@@ -91,7 +91,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     if (!isMyTurn || chess.isGameOver()) return;
     setChess(prev => {
       const updated = new Chess();
-      updated.load_pgn(prev.pgn());
+      prev.history().forEach(m => updated.move(m));
       updated.move(move);
       return updated;
     });
@@ -119,7 +119,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
         if (move && move !== '(none)') {
           setChess(prev => {
             const updated = new Chess();
-            updated.load_pgn(prev.pgn());
+            prev.history().forEach(m => updated.move(m));
             updated.move({ from: move.substring(0, 2), to: move.substring(2, 4), promotion: move.length > 4 ? move[4] : undefined });
             return updated;
           });
