@@ -255,9 +255,10 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     setShowGameOverModal(false);
   };
 
+  // Place debug log here, outside of JSX
+  console.log('showGameOverModal:', showGameOverModal);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
-      {console.log('showGameOverModal:', showGameOverModal)}
       {/* Game Over Modal (always rendered at top level) */}
       {showGameOverModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -384,7 +385,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
             <MoveHistoryBox chess={chess} />
           </div>
         </div>
-      </div>
     </div>
   );
 }; 
