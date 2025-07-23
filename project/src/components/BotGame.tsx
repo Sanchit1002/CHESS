@@ -296,6 +296,103 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           Resign
         </button>
       </div>
+      {/* Main Layout: Controls, Eval bar, Board, Move History */}
+      <div className="flex flex-row items-start justify-center gap-6 w-full max-w-5xl">
+        {/* Controls Column (left of board) */}
+        <div className="flex flex-col items-center w-[480px] mb-4">
+          <div className="w-full flex flex-col gap-4 bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 border border-slate-200 dark:border-slate-700 mb-4">
+            <div className="flex items-center gap-2 justify-between w-full">
+              <label className="font-semibold text-slate-900 dark:text-amber-200">Bot Difficulty:</label>
+              <select
+                value={difficulty}
+                onChange={e => setDifficulty(Number(e.target.value))}
+                className="px-3 py-1 rounded-lg border-2 border-amber-400 bg-white dark:bg-slate-900 text-slate-900 dark:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                style={{ minWidth: '120px' }}
+              >
+                {DIFFICULTY_LEVELS.map(level => (
+                  <option key={level.value} value={level.value}>{level.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2 justify-between w-full">
+              <label className="font-semibold text-slate-900 dark:text-amber-200">Show Move Suggestion:</label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showSuggestion}
+                  onChange={e => setShowSuggestion(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 dark:bg-slate-700 rounded-full peer dark:peer-focus:ring-amber-800 transition-all duration-200 peer-checked:bg-amber-500"></div>
+                <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-200 peer-checked:translate-x-5"></div>
+              </label>
+              <span className="text-sm text-slate-700 dark:text-amber-200">(Best move for you)</span>
+            </div>
+          </div>
+          {/* Evaluation Bar */}
+          <div className="flex flex-col items-center">
+            <div className="h-80 w-7 bg-gradient-to-b from-white to-slate-400 dark:from-slate-200 dark:to-slate-900 rounded-lg border-2 border-amber-400 overflow-hidden relative">
+              <div
+                className="absolute left-0 w-full bg-amber-400 transition-all duration-300"
+                style={{ bottom: 0, height: `${evalBarPercent}%` }}
+              ></div>
+            </div>
+            <div className="mt-2 text-xs text-center">
+              {evaluation !== null ? (
+                <span className={evaluation > 0 ? 'text-amber-700' : evaluation < 0 ? 'text-slate-900 dark:text-amber-200' : ''}>
+                  {evaluation > 99 ? '#M' : evaluation < -99 ? '#M' : evaluation.toFixed(2)}
+                </span>
+              ) : (
+                <span className="text-slate-400">--</span>
+              )}
+            </div>
+          </div>
+        </div>
+        {/* Chess Board and Suggestions */}
+        <div className="flex flex-col items-center">
+          <ChessBoard
+            chess={chess}
+            onMove={isMyTurn && !chess.isGameOver() ? handleMove : () => {}}
+            isGameOver={chess.isGameOver()}
+            boardTheme={boardTheme}
+            isFlipped={playerColor === 'b'}
+            isMyTurn={isMyTurn && !chess.isGameOver()}
+          />
+          {showSuggestion && isMyTurn && suggestedMove && suggestedMove !== '...' && (
+            <div className="mt-2 text-center w-[480px]">
+              <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse w-full">
+                Suggested move: {suggestedMove}
+              </span>
+            </div>
+          )}
+          {showSuggestion && isMyTurn && suggestedMove === '...' && (
+            <div className="mt-2 text-center text-amber-600 dark:text-amber-300 animate-pulse w-[480px]">Calculating suggestion...</div>
+          )}
+          {isBotThinking && (
+            <div className="mt-4 text-center text-amber-600 dark:text-amber-300 animate-pulse w-[480px]">Bot is thinking...</div>
+          )}
+          {chess.isGameOver() && !showGameOverModal && (
+            <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold w-[480px]">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
+          )}
+          {showSuggestion && isMyTurn && topMoves && topMoves.length > 0 && (
+            <div className="mt-2 text-center w-[480px]">
+              <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-4 py-2 w-full">
+                <span className="font-semibold text-slate-700 dark:text-amber-200 mr-2">Top 3 moves:</span>
+                <ul className="flex flex-row gap-3 justify-center items-center">
+                  {topMoves.map((m, i) => (
+                    <li key={i} className="flex flex-col items-center">
+                      <span className={`font-mono font-bold px-2 py-1 rounded-lg ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'}`}>{m.move}</span>
+                      <span className="text-xs text-slate-500 dark:text-amber-200">{m.eval !== null ? (m.eval > 99 ? '#M' : m.eval < -99 ? '#M' : m.eval.toFixed(2)) : '--'}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Move History */}
+        <MoveHistoryBox chess={chess} />
+      </div>
       {/* Game Over Modal (always rendered at top level) */}
       {showGameOverModal && (
         (() => { console.log('Rendering modal!'); return null; })(),
@@ -321,108 +418,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           </div>
         </div>
       )}
-      {/* Main content, blurred and disabled when modal is open */}
-      <div className={showGameOverModal ? 'pointer-events-none blur-sm select-none' : ''}>
-          <button onClick={onBack} className="mb-4 px-4 py-2 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600">Back</button>
-          <h2 className="text-2xl font-bold mb-2 text-center text-slate-900 dark:text-amber-200">Play vs Bot</h2>
-          <p className="text-center mb-4 text-slate-700 dark:text-slate-200">You are playing as <span className="font-bold">{playerColor === 'w' ? 'White' : 'Black'}</span></p>
-          {/* Controls Card */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-6">
-            <div className="bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 flex flex-col md:flex-row items-center gap-4 border border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-slate-900 dark:text-amber-200">Bot Difficulty:</label>
-                <select
-                  value={difficulty}
-                  onChange={e => setDifficulty(Number(e.target.value))}
-                  className="px-3 py-1 rounded-lg border-2 border-amber-400 bg-white dark:bg-slate-900 text-slate-900 dark:text-amber-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                >
-                  {DIFFICULTY_LEVELS.map(level => (
-                    <option key={level.value} value={level.value}>{level.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="font-semibold text-slate-900 dark:text-amber-200">Show Move Suggestion:</label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showSuggestion}
-                    onChange={e => setShowSuggestion(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 dark:bg-slate-700 rounded-full peer dark:peer-focus:ring-amber-800 transition-all duration-200 peer-checked:bg-amber-500"></div>
-                  <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-200 peer-checked:translate-x-5"></div>
-                </label>
-                <span className="text-sm text-slate-700 dark:text-amber-200">(Best move for you)</span>
-              </div>
-            </div>
-          </div>
-          {/* Main Layout: Eval bar, Board, Move History */}
-          <div className="flex flex-row items-start justify-center gap-6">
-            {/* Evaluation Bar */}
-            <div className="flex flex-col items-center mr-2">
-              <div className="h-80 w-7 bg-gradient-to-b from-white to-slate-400 dark:from-slate-200 dark:to-slate-900 rounded-lg border-2 border-amber-400 overflow-hidden relative">
-                <div
-                  className="absolute left-0 w-full bg-amber-400 transition-all duration-300"
-                  style={{ bottom: 0, height: `${evalBarPercent}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 text-xs text-center">
-                {evaluation !== null ? (
-                  <span className={evaluation > 0 ? 'text-amber-700' : evaluation < 0 ? 'text-slate-900 dark:text-amber-200' : ''}>
-                    {evaluation > 99 ? '#M' : evaluation < -99 ? '#M' : evaluation.toFixed(2)}
-                  </span>
-                ) : (
-                  <span className="text-slate-400">--</span>
-                )}
-              </div>
-            </div>
-            {/* Chess Board */}
-            <div className="flex flex-col items-center">
-              <ChessBoard
-                chess={chess}
-                onMove={isMyTurn && !chess.isGameOver() ? handleMove : () => {}}
-                isGameOver={chess.isGameOver()}
-                boardTheme={boardTheme}
-                isFlipped={playerColor === 'b'}
-                isMyTurn={isMyTurn && !chess.isGameOver()}
-              />
-              {showSuggestion && isMyTurn && suggestedMove && suggestedMove !== '...' && (
-                <div className="mt-2 text-center">
-                  <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse">
-                    Suggested move: {suggestedMove}
-                  </span>
-                </div>
-              )}
-              {showSuggestion && isMyTurn && suggestedMove === '...' && (
-                <div className="mt-2 text-center text-amber-600 dark:text-amber-300 animate-pulse">Calculating suggestion...</div>
-              )}
-              {isBotThinking && (
-                <div className="mt-4 text-center text-amber-600 dark:text-amber-300 animate-pulse">Bot is thinking...</div>
-              )}
-              {chess.isGameOver() && !showGameOverModal && (
-                <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
-              )}
-              {showSuggestion && isMyTurn && topMoves && topMoves.length > 0 && (
-                <div className="mt-2 text-center">
-                  <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-4 py-2">
-                    <span className="font-semibold text-slate-700 dark:text-amber-200 mr-2">Top 3 moves:</span>
-                    <ul className="flex flex-row gap-3 justify-center items-center">
-                      {topMoves.map((m, i) => (
-                        <li key={i} className="flex flex-col items-center">
-                          <span className={`font-mono font-bold px-2 py-1 rounded-lg ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'}`}>{m.move}</span>
-                          <span className="text-xs text-slate-500 dark:text-amber-200">{m.eval !== null ? (m.eval > 99 ? '#M' : m.eval < -99 ? '#M' : m.eval.toFixed(2)) : '--'}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Move History */}
-            <MoveHistoryBox chess={chess} />
-          </div>
-        </div>
     </div>
   );
 }; 
