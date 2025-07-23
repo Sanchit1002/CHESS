@@ -24,6 +24,7 @@ const BOARD_THEMES = {
     lastMove: '#f7f769'
   },
   blue: {
+    // cool blue tones ocean
     lightSquare: '#e8f4fd',
     darkSquare: '#7fa6d1',
     selectedSquare: '#4a90e2',

@@ -23,6 +23,11 @@ export class DataService {
   // Save game result
   async saveGameResult(result: GameResult): Promise<void> {
     try {
+      // If opponent is 'Computer', ensure type is 'singleplayer' and opponent is set
+      if (result.player2 === 'Computer') {
+        (result as any).type = 'singleplayer';
+        (result as any).opponent = 'Computer';
+      }
       // Save to Firebase
       await this.firebaseService.saveGameResult(result);
       
@@ -104,15 +109,14 @@ export class DataService {
   // Update player stats after a game
   private async updatePlayerStats(gameResult: GameResult): Promise<void> {
     const playerStats = await this.getPlayerStats();
-    
-    // Update player 1 stats
+    // Update player 1 stats (always the human user)
     const player1Stats = this.getOrCreatePlayerStats(gameResult.player1, playerStats);
     this.updatePlayerStatsFromGame(player1Stats, gameResult, gameResult.player1);
-    
-    // Update player 2 stats
-    const player2Stats = this.getOrCreatePlayerStats(gameResult.player2, playerStats);
-    this.updatePlayerStatsFromGame(player2Stats, gameResult, gameResult.player2);
-    
+    // Only update player 2 stats if not 'Computer'
+    if (gameResult.player2 !== 'Computer') {
+      const player2Stats = this.getOrCreatePlayerStats(gameResult.player2, playerStats);
+      this.updatePlayerStatsFromGame(player2Stats, gameResult, gameResult.player2);
+    }
     // Save updated stats to localStorage as backup
     localStorage.setItem('chessPlayerStats', JSON.stringify(playerStats));
   }

@@ -104,10 +104,10 @@ export const Game: React.FC<GameProps> = ({
       moves,
       timeControl: timeControl,
       pgn,
-      player1Rating: ratings.player1Rating,
-      player2Rating: ratings.player2Rating,
-      player1RatingChange: ratings.player1RatingChange,
-      player2RatingChange: ratings.player2RatingChange
+      player1Rating: ratings?.player1Rating ?? 1200,
+      player2Rating: ratings?.player2Rating ?? 1200,
+      player1RatingChange: ratings?.player1RatingChange ?? 0,
+      player2RatingChange: ratings?.player2RatingChange ?? 0
     };
     
     try {
