@@ -59,6 +59,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
   const suggestionStockfishRef = useRef<Worker | null>(null);
   const evalStockfishRef = useRef<Worker | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
+  const [manualGameOver, setManualGameOver] = useState<null | 'draw' | 'resign'>(null);
 
   useEffect(() => {
     if (color === 'random') {
@@ -241,8 +242,24 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     evalBarPercent = 50 + (cappedEval * 5);
   }
 
-  // Game over modal content
+  // Add handlers for draw and resign
+  const handleDraw = () => {
+    setManualGameOver('draw');
+    setShowGameOverModal(true);
+  };
+  const handleResign = () => {
+    setManualGameOver('resign');
+    setShowGameOverModal(true);
+  };
+
+  // Update getGameOverMessage to handle manualGameOver
   const getGameOverMessage = () => {
+    if (manualGameOver === 'draw') {
+      return { msg: 'Draw!', icon: <Handshake size={48} className="text-blue-400 mb-2" />, color: 'text-blue-500' };
+    }
+    if (manualGameOver === 'resign') {
+      return { msg: 'You resigned. Bot wins!', icon: <XCircle size={48} className="text-red-500 mb-2" />, color: 'text-red-600' };
+    }
     if (chess.isCheckmate()) {
       return isMyTurn ? { msg: 'Bot wins!', icon: <XCircle size={48} className="text-red-500 mb-2" />, color: 'text-red-600' } : { msg: 'You win!', icon: <Trophy size={48} className="text-amber-400 mb-2" />, color: 'text-amber-500' };
     }
@@ -255,12 +272,30 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
   const handlePlayAgain = () => {
     setChess(new Chess());
     setShowGameOverModal(false);
+    setManualGameOver(null);
   };
 
   // Place debug log here, outside of JSX
   console.log('showGameOverModal:', showGameOverModal);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+      {/* Draw and Resign Buttons */}
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={handleDraw}
+          disabled={chess.isGameOver() || showGameOverModal}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow disabled:opacity-50"
+        >
+          Offer Draw
+        </button>
+        <button
+          onClick={handleResign}
+          disabled={chess.isGameOver() || showGameOverModal}
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg shadow disabled:opacity-50"
+        >
+          Resign
+        </button>
+      </div>
       {/* Game Over Modal (always rendered at top level) */}
       {showGameOverModal && (
         (() => { console.log('Rendering modal!'); return null; })(),
