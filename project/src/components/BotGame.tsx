@@ -89,12 +89,13 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
 
   const handleMove = (move: { from: string; to: string; promotion?: string }) => {
     if (!isMyTurn || chess.isGameOver()) return;
-    const newChess = new Chess(chess.fen());
-    const result = newChess.move(move);
-    if (result) {
-      setChess(newChess);
-      setSuggestedMove(null);
-    }
+    setChess(prev => {
+      const updated = new Chess();
+      updated.load_pgn(prev.pgn());
+      updated.move(move);
+      return updated;
+    });
+    setSuggestedMove(null);
   };
 
   useEffect(() => {
@@ -116,12 +117,12 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
       if (typeof line === 'string' && line.startsWith('bestmove')) {
         const move = line.split(' ')[1];
         if (move && move !== '(none)') {
-          const from = move.substring(0, 2);
-          const to = move.substring(2, 4);
-          const promotion = move.length > 4 ? move[4] : undefined;
-          const newChess = new Chess(chess.fen());
-          newChess.move({ from, to, promotion });
-          setChess(newChess);
+          setChess(prev => {
+            const updated = new Chess();
+            updated.load_pgn(prev.pgn());
+            updated.move({ from: move.substring(0, 2), to: move.substring(2, 4), promotion: move.length > 4 ? move[4] : undefined });
+            return updated;
+          });
         }
         setIsBotThinking(false);
       }
