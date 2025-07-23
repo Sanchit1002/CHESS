@@ -142,80 +142,55 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
         </div>
 
         {/* Game Mode Cards */}
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 mb-12">
             {TIME_CONTROLS.map((mode) => {
               const IconComponent = mode.icon;
               const isSelected = selectedMode === mode.id;
               return (
                 <div
                   key={mode.id}
-                  className="relative cursor-pointer transition-all duration-200"
+                  className={`relative flex flex-col items-center justify-between cursor-pointer transition-all duration-200 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 h-64 min-w-[180px] max-w-xs mx-auto border-2 ${isSelected ? 'border-amber-500' : 'border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'} hover:scale-105 hover:shadow-2xl`}
                   onClick={() => setSelectedMode(mode.id)}
                 >
-                  <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${isSelected ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-3 rounded-full ${mode.color} text-white`}>
-                          <IconComponent size={24} />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{mode.name}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{mode.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm">{mode.description}</p>
+                  <div className={`flex items-center justify-center w-14 h-14 rounded-full mb-4 ${mode.color} text-white text-3xl shadow-lg`}>
+                    <IconComponent size={32} />
                   </div>
+                  <h3 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 text-center mb-1">{mode.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-300 text-center mb-2">{mode.time}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-center text-base flex-1 flex items-center justify-center">{mode.description}</p>
                 </div>
               );
             })}
             {/* Bot Mode Card */}
             <div
-              className="relative cursor-pointer transition-all duration-200"
+              className={`relative flex flex-col items-center justify-between cursor-pointer transition-all duration-200 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 h-64 min-w-[180px] max-w-xs mx-auto border-2 ${selectedMode === BOT_MODE.id ? 'border-amber-500' : 'border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'} hover:scale-105 hover:shadow-2xl`}
               onClick={() => setSelectedMode(BOT_MODE.id)}
             >
-              <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${selectedMode === BOT_MODE.id ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-3 rounded-full ${BOT_MODE.color} text-white`}>
-                      <Play size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{BOT_MODE.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{BOT_MODE.time}</p>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">{BOT_MODE.description}</p>
+              <div className={`flex items-center justify-center w-14 h-14 rounded-full mb-4 ${BOT_MODE.color} text-white text-3xl shadow-lg`}>
+                <Play size={32} />
               </div>
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 text-center mb-1">{BOT_MODE.name}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-300 text-center mb-2">{BOT_MODE.time}</p>
+              <p className="text-gray-600 dark:text-gray-300 text-center text-base flex-1 flex items-center justify-center">{BOT_MODE.description}</p>
             </div>
             {/* Custom Timer Card */}
             <div
-              className="relative cursor-pointer transition-all duration-200"
+              className={`relative flex flex-col items-center justify-between cursor-pointer transition-all duration-200 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 h-64 min-w-[180px] max-w-xs mx-auto border-2 ${selectedMode === 'custom' ? 'border-amber-500' : 'border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'} hover:scale-105 hover:shadow-2xl`}
               onClick={() => setShowCustomTimer(true)}
             >
-              <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors ${selectedMode === 'custom' ? 'border-4 border-amber-500' : 'border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400'}`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-3 rounded-full bg-purple-500 hover:bg-purple-600 text-white">
-                      <Settings size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                        {customTimeControl ? customTimeControl.name : 'Custom'}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {customTimeControl 
-                          ? `${customTimeControl.minutes}:${customTimeControl.seconds.toString().padStart(2, '0')}${customTimeControl.increment > 0 ? `+${customTimeControl.increment}` : ''}`
-                          : 'Set your own time'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">Create your own time control</p>
+              <div className="flex items-center justify-center w-14 h-14 rounded-full mb-4 bg-purple-500 hover:bg-purple-600 text-white text-3xl shadow-lg">
+                <Settings size={32} />
               </div>
+              <h3 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 text-center mb-1">
+                {customTimeControl ? customTimeControl.name : 'Custom'}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-300 text-center mb-2">
+                {customTimeControl 
+                  ? `${customTimeControl.minutes}:${customTimeControl.seconds.toString().padStart(2, '0')}${customTimeControl.increment > 0 ? `+${customTimeControl.increment}` : ''}`
+                  : 'Set your own time'}
+              </p>
+              <p className="text-gray-600 dark:text-gray-300 text-center text-base flex-1 flex items-center justify-center">Create your own time control</p>
             </div>
           </div>
 
