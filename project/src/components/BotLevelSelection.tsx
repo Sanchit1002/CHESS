@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ChessPiece } from './ChessPiece';
 
 const BOT_LEVELS = [
   {
@@ -7,7 +8,7 @@ const BOT_LEVELS = [
     bots: [
       { name: 'Martin', rating: 600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Martin', locked: false, unlockCriteria: '', personality: 'Calm and defensive', beaten: true },
       { name: 'Anna', rating: 800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Anna', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
-      { name: 'John', rating: 1000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=John', locked: true, unlockCriteria: 'Win 1 game vs Martin', personality: 'Aggressive opener', beaten: false },
+      { name: 'John', rating: 1000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=John', locked: false, unlockCriteria: '', personality: 'Aggressive opener', beaten: false },
     ],
   },
   {
@@ -15,17 +16,17 @@ const BOT_LEVELS = [
     difficulty: 8,
     bots: [
       { name: 'Maria', rating: 1200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Maria', locked: false, unlockCriteria: '', personality: 'Tactical and sharp', beaten: false },
-      { name: 'T-Rex', rating: 1400, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=TRex', locked: true, unlockCriteria: 'Reach 1000 rating', personality: 'Relentless attacker', beaten: false },
-      { name: 'Kate', rating: 1600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kate', locked: true, unlockCriteria: 'Beat Maria', personality: 'Solid and positional', beaten: false },
+      { name: 'T-Rex', rating: 1400, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=TRex', locked: false, unlockCriteria: '', personality: 'Relentless attacker', beaten: false },
+      { name: 'Kate', rating: 1600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kate', locked: false, unlockCriteria: '', personality: 'Solid and positional', beaten: false },
     ],
   },
   {
     label: 'Master',
     difficulty: 15,
     bots: [
-      { name: 'Pablo', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pablo', locked: true, unlockCriteria: 'Reach 1500 rating', personality: 'Endgame expert', beaten: false },
-      { name: 'Sophia', rating: 2000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: true, unlockCriteria: 'Beat Pablo', personality: 'Tricky tactician', beaten: false },
-      { name: 'Alex', rating: 2200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex', locked: true, unlockCriteria: 'Win 10 games vs bots', personality: 'Universal style', beaten: false },
+      { name: 'Pablo', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pablo', locked: false, unlockCriteria: '', personality: 'Endgame expert', beaten: false },
+      { name: 'Sophia', rating: 2000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky tactician', beaten: false },
+      { name: 'Alex', rating: 2200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex', locked: false, unlockCriteria: '', personality: 'Universal style', beaten: false },
     ],
   },
 ];
@@ -52,35 +53,36 @@ const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-      <h1 className="text-5xl font-extrabold mb-12 text-center text-amber-200 tracking-wide drop-shadow-lg">Choose Your Bot Opponent</h1>
-      <div className="flex flex-row gap-16">
+      <h1 className="text-4xl font-extrabold mb-16 text-center bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 bg-clip-text text-transparent drop-shadow-lg">Choose Your Bot Opponent</h1>
+      <div className="flex flex-row gap-6">
         {BOT_LEVELS.map(level => (
-          <div key={level.label} className="bg-slate-800/90 rounded-3xl shadow-2xl border-2 border-amber-300 p-10 w-96 flex flex-col items-center justify-center">
+          <div key={level.label} className="bg-slate-800/90 rounded-3xl shadow-2xl border-2 border-amber-300 p-4 w-72 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-amber-400/30 hover:border-amber-300">
             <h2 className="text-3xl font-extrabold mb-2 text-amber-300 tracking-wide drop-shadow">{level.label}</h2>
-            <div className="mb-8 text-2xl font-bold text-amber-100 uppercase tracking-wider drop-shadow-lg">{level.label === 'Beginner' ? 'Easy' : level.label === 'Intermediate' ? 'Medium' : 'Hard'}</div>
-            <div className="grid grid-cols-3 gap-10 mb-2 w-full items-center justify-center -ml-8">
+            <div className="mb-6 text-xl font-bold text-amber-100 uppercase tracking-wider drop-shadow-lg">{level.label === 'Beginner' ? 'Easy' : level.label === 'Intermediate' ? 'Medium' : 'Hard'}</div>
+            <div className="flex flex-row gap-4 mb-2 w-full items-center justify-center">
               {level.bots.map((bot) => {
-                const unlocked = isUnlocked(bot.name);
+                const unlocked = true;
                 const beaten = isBeaten(bot.name);
                 return (
-                  <div key={bot.name} className={`relative group transition-all duration-300 ${unlocked && achievements.unlocked.includes(bot.name) ? 'animate-bot-unlock' : ''}`}>
-                    <button
-                      className={`flex flex-col items-center p-2 rounded-2xl transition border-2 border-transparent focus:outline-none w-28 h-40 ${!unlocked ? 'cursor-not-allowed opacity-60 grayscale' : 'hover:bg-amber-100/10 hover:border-amber-400'}`}
-                      onClick={() => unlocked && onSelect({ ...bot, difficulty: level.difficulty, level: level.label })}
-                      onMouseEnter={e => setTooltip({ x: e.clientX, y: e.clientY, text: !unlocked ? `Locked: ${bot.unlockCriteria}` : `${bot.personality}` })}
-                      onMouseLeave={() => setTooltip(null)}
-                      disabled={!unlocked}
+                  <button
+                    key={bot.name}
+                    className="flex flex-col items-center focus:outline-none group"
+                    onClick={() => onSelect({ ...bot, difficulty: level.difficulty, level: level.label })}
+                    onMouseEnter={e => setTooltip({ x: e.clientX, y: e.clientY, text: bot.personality })}
+                    onMouseLeave={() => setTooltip(null)}
+                    disabled={false}
+                  >
+                    <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center mb-2 transition-all duration-200 border-amber-400 shadow-lg group-hover:shadow-amber-400/50 group-hover:animate-avatar-pulse`}>
+                      <img src={bot.img} alt={bot.name} className="w-12 h-12 rounded-full" />
+                    </div>
+                    <span
+                      className="font-extrabold text-lg mt-1"
+                      style={{ color: '#fbbf24', textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}
                     >
-                      <div className="relative mb-2">
-                        <img src={bot.img} alt={bot.name} className="w-20 h-20 rounded-full border-4 border-amber-400 shadow-xl bg-slate-700" />
-                        {beaten && unlocked && (
-                          <span className="absolute -top-3 -right-3 bg-green-500 text-white rounded-full px-3 py-2 text-xl font-extrabold shadow-lg animate-badge-glow">✔</span>
-                        )}
-                      </div>
-                      <span className="font-extrabold text-2xl text-amber-100 drop-shadow-lg mt-1">{bot.name}</span>
-                      <span className="text-lg text-amber-300 font-bold mt-1">{bot.rating}</span>
-                    </button>
-                  </div>
+                      {bot.name}
+                    </span>
+                    <span className="text-base font-bold drop-shadow text-amber-300">{bot.rating}</span>
+                  </button>
                 );
               })}
             </div>
