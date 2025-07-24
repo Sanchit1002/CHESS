@@ -6,27 +6,27 @@ const BOT_LEVELS = [
     label: 'Beginner',
     difficulty: 4,
     bots: [
-      { name: 'Martin', rating: 600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Martin', locked: false, unlockCriteria: '', personality: 'Calm and defensive', beaten: true },
-      { name: 'Anna', rating: 800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Anna', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
-      { name: 'John', rating: 1000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=John', locked: false, unlockCriteria: '', personality: 'Aggressive opener', beaten: false },
+      { name: 'Tirtha', rating: 600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Martin', locked: false, unlockCriteria: '', personality: 'Calm and defensive', beaten: true },
+      { name: 'Kabir', rating: 800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Anna', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
+      { name: 'Madhur', rating: 1000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=John', locked: false, unlockCriteria: '', personality: 'Aggressive opener', beaten: false },
     ],
   },
   {
     label: 'Intermediate',
     difficulty: 8,
     bots: [
-      { name: 'Maria', rating: 1200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Maria', locked: false, unlockCriteria: '', personality: 'Tactical and sharp', beaten: false },
-      { name: 'T-Rex', rating: 1400, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=TRex', locked: false, unlockCriteria: '', personality: 'Relentless attacker', beaten: false },
-      { name: 'Kate', rating: 1600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kate', locked: false, unlockCriteria: '', personality: 'Solid and positional', beaten: false },
+      { name: 'Nishant', rating: 1200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Maria', locked: false, unlockCriteria: '', personality: 'Tactical and sharp', beaten: false },
+      { name: 'Savi', rating: 1400, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=TRex', locked: false, unlockCriteria: '', personality: 'Relentless attacker', beaten: false },
+      { name: 'Adarsh', rating: 1600, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Kate', locked: false, unlockCriteria: '', personality: 'Solid and positional', beaten: false },
     ],
   },
   {
     label: 'Master',
     difficulty: 15,
     bots: [
-      { name: 'Pablo', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pablo', locked: false, unlockCriteria: '', personality: 'Endgame expert', beaten: false },
-      { name: 'Sophia', rating: 2000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky tactician', beaten: false },
-      { name: 'Alex', rating: 2200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex', locked: false, unlockCriteria: '', personality: 'Universal style', beaten: false },
+      { name: 'Sakshi', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Pablo', locked: false, unlockCriteria: '', personality: 'Endgame expert', beaten: false },
+      { name: 'Sanchit', rating: 2000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky tactician', beaten: false },
+      { name: 'Gukesh', rating: 2200, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alex', locked: false, unlockCriteria: '', personality: 'Universal style', beaten: false },
     ],
   },
 ];
