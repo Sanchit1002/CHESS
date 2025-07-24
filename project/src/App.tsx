@@ -12,8 +12,9 @@ import { Competitive } from './components/Competitive';
 import { TestData } from './components/TestData';
 import { Moon, Sun } from 'lucide-react';
 import { BotGame } from './components/BotGame';
+import BotLevelSelection from './components/BotLevelSelection';
 
-type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv' | 'botGame';
+type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv' | 'botGame' | 'botLevelSelection';
 
 interface User {
   username: string;
@@ -36,6 +37,7 @@ function App() {
   const [selectedColor, setSelectedColor] = useState<'white' | 'black' | 'random'>('white');
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [wantsHelp, setWantsHelp] = useState<boolean | null>(null);
+  const [selectedBot, setSelectedBot] = useState<any>(null);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -93,7 +95,7 @@ function App() {
     if (timeControl === 'bot') {
       setSelectedBoardTheme(boardTheme);
       setSelectedColor(color);
-      setCurrentState('botGame');
+      setCurrentState('botLevelSelection');
       return;
     }
     if (typeof timeControl === 'string') {
@@ -144,6 +146,11 @@ function App() {
   const handleChallengeFriend = (friendId: string, friendName: string, timeControl: string, boardTheme: string) => {
     // For now, let user pick color in GameModeSelection before challenging
     handleStartGame(timeControl, boardTheme, selectedColor, friendName);
+  };
+
+  const handleBotSelected = (bot: any) => {
+    setSelectedBot(bot);
+    setCurrentState('botGame');
   };
 
   const handleLogout = () => {
@@ -399,12 +406,19 @@ function App() {
         );
       case 'testEnv':
         return <TestEnv />;
+      case 'botLevelSelection':
+        return <BotLevelSelection onSelect={handleBotSelected} />;
       case 'botGame':
         return (
           <BotGame
             boardTheme={selectedBoardTheme}
             color={selectedColor}
             onBack={switchToGameMode}
+            difficulty={selectedBot?.difficulty || 8}
+            botAvatar={selectedBot?.img}
+            botName={selectedBot?.name}
+            botRating={selectedBot?.rating}
+            botFlag={selectedBot?.flag}
           />
         );
       case 'game':

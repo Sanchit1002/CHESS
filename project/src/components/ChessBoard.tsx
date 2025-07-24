@@ -78,7 +78,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [animatingMove, setAnimatingMove] = useState<{ from: string; to: string } | null>(null);
   const [hoveredSquare, setHoveredSquare] = useState<string | null>(null);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-
+  
   // Drag and drop state
   const [draggedPiece, setDraggedPiece] = useState<string | null>(null);
   const [dragOverSquare, setDragOverSquare] = useState<string | null>(null);
@@ -121,17 +121,17 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         setAnimatingMove(move);
         // Check for pawn promotion
         const movingPiece = chess.get(selectedSquare as any);
-        const toRank = parseInt(square[1]);
+          const toRank = parseInt(square[1]);
         if (movingPiece?.type === 'p' && ((movingPiece.color === 'w' && toRank === 8) || (movingPiece.color === 'b' && toRank === 1))) {
-          setPromotionSquare(square);
-          setAnimatingMove(null);
-          return;
-        }
+            setPromotionSquare(square);
+            setAnimatingMove(null);
+            return;
+          }
         setTimeout(() => {
-          onMove(move);
+        onMove(move);
           setSelectedSquare(null);
           setValidMoves([]);
-          setLastMove({ from: selectedSquare, to: square });
+        setLastMove({ from: selectedSquare, to: square });
           setAnimatingMove(null);
         }, 150);
       } else {
@@ -195,10 +195,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       const move = { from: draggedPiece, to: square };
       setAnimatingMove(move);
       const movingPiece = chess.get(draggedPiece as any);
-      const toRank = parseInt(square[1]);
+        const toRank = parseInt(square[1]);
       if (movingPiece?.type === 'p' && ((movingPiece.color === 'w' && toRank === 8) || (movingPiece.color === 'b' && toRank === 1))) {
-        setPromotionSquare(square);
-        setAnimatingMove(null);
+          setPromotionSquare(square);
+          setAnimatingMove(null);
       } else {
         setTimeout(() => {
           onMove(move);
@@ -370,22 +370,49 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     const cols = isFlipped ? Array.from({ length: 8 }, (_, i) => 7 - i) : Array.from({ length: 8 }, (_, i) => i);
 
     return (
-      <div className="grid grid-cols-8 w-[36rem] h-[36rem] rounded-lg overflow-hidden">
+      <div className="grid grid-cols-8 grid-rows-8 w-[36rem] h-[36rem] rounded-lg shadow-2xl overflow-hidden">
         {rows.map((row) =>
-          cols.map((col) => renderSquare(row, col))
+          cols.map((col) => (
+            <div key={`${row}-${col}`} className="w-full h-full aspect-square">
+              {renderSquare(row, col)}
+            </div>
+          ))
         )}
       </div>
     );
   }, [isFlipped, renderSquare]);
 
   return (
-    <div className="w-[36rem] h-[36rem] mx-auto p-0 m-0">
+    <div className="w-[36rem] h-[36rem] mx-auto p-0 m-0 relative">
       {renderBoard()}
-      
-      {/* Promotion instructions */}
+      {/* Modern Promotion Modal */}
       {promotionSquare && (
-        <div className="text-sm text-gray-600 text-center mt-2">
-          Choose promotion piece
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 flex flex-col items-center border-4 border-amber-400 animate-pop">
+            <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-amber-200">Choose promotion piece</h2>
+            <div className="flex flex-row gap-6 justify-center items-center w-full max-w-md">
+              {[
+                { type: 'q', label: 'Queen' },
+                { type: 'r', label: 'Rook' },
+                { type: 'b', label: 'Bishop' },
+                { type: 'n', label: 'Knight' },
+              ].map(({ type, label }) => (
+                <button
+                  key={type}
+                  onClick={() => handlePromotion(type)}
+                  className="flex flex-col items-center w-20 px-2 py-2 bg-amber-100 dark:bg-slate-700 rounded-xl shadow hover:bg-amber-200 dark:hover:bg-slate-600 transition-all border-2 border-amber-400 focus:outline-none"
+                >
+                  <ChessPiece
+                    piece={`${chess.turn()}${type.toUpperCase()}`}
+                    isSelected={false}
+                    onMouseDown={() => {}}
+                    className="relative w-12 h-12"
+                  />
+                  <span className="mt-2 text-lg font-semibold text-slate-900 dark:text-amber-200">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

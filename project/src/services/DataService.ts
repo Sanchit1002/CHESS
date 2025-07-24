@@ -114,8 +114,8 @@ export class DataService {
     this.updatePlayerStatsFromGame(player1Stats, gameResult, gameResult.player1);
     // Only update player 2 stats if not 'Computer'
     if (gameResult.player2 !== 'Computer') {
-      const player2Stats = this.getOrCreatePlayerStats(gameResult.player2, playerStats);
-      this.updatePlayerStatsFromGame(player2Stats, gameResult, gameResult.player2);
+    const player2Stats = this.getOrCreatePlayerStats(gameResult.player2, playerStats);
+    this.updatePlayerStatsFromGame(player2Stats, gameResult, gameResult.player2);
     }
     // Save updated stats to localStorage as backup
     localStorage.setItem('chessPlayerStats', JSON.stringify(playerStats));

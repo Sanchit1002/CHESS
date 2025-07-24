@@ -7,6 +7,11 @@ interface BotGameProps {
   boardTheme: string;
   color: 'white' | 'black' | 'random';
   onBack: () => void;
+  difficulty?: number;
+  botAvatar?: string;
+  botName?: string;
+  botRating?: number;
+  botFlag?: string;
 }
 
 const DIFFICULTY_LEVELS = [
@@ -14,6 +19,8 @@ const DIFFICULTY_LEVELS = [
   { label: 'Medium', value: 8 },
   { label: 'Hard', value: 15 },
 ];
+
+const STORAGE_KEY = 'botAchievements';
 
 // MoveHistoryBox component
 const MoveHistoryBox: React.FC<{ chess: Chess }> = ({ chess }) => {
@@ -46,11 +53,11 @@ const MoveHistoryBox: React.FC<{ chess: Chess }> = ({ chess }) => {
   );
 };
 
-export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) => {
+export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, difficulty: initialDifficulty, botAvatar, botName, botRating, botFlag }) => {
   const [chess, setChess] = useState(new Chess());
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
-  const [difficulty, setDifficulty] = useState<number>(8); // Default: Medium
+  const [difficulty, setDifficulty] = useState<number>(initialDifficulty ?? 8); // Use prop if provided
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [suggestedMove, setSuggestedMove] = useState<string | null>(null);
   const [evaluation, setEvaluation] = useState<number | null>(null); // Stockfish eval
@@ -60,6 +67,17 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
   const evalStockfishRef = useRef<Worker | null>(null);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [manualGameOver, setManualGameOver] = useState<null | 'draw' | 'resign'>(null);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'info' }[]>([]);
+  const toastId = useRef(0);
+
+  // Helper to show toast
+  const showToast = (message: string, type: 'success' | 'info' = 'success') => {
+    const id = ++toastId.current;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
 
   useEffect(() => {
     if (color === 'random') {
@@ -108,17 +126,50 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     // eslint-disable-next-line
   }, [chess.fen(), isMyTurn]);
 
+  // Helper to get bot depth and randomness based on rating
+  const getBotSettings = (botRating: number) => {
+    if (botRating <= 800) return { depth: 1, randomness: 2 }; // pick randomly from top 2 moves
+    if (botRating <= 1000) return { depth: 2, randomness: 2 }; // pick randomly from top 2 moves
+    if (botRating <= 1200) return { depth: 3, randomness: 1 }; // sometimes pick 2nd best
+    if (botRating <= 1400) return { depth: 4, randomness: 0 }; // always best
+    if (botRating <= 1600) return { depth: 6, randomness: 0 };
+    if (botRating <= 1800) return { depth: 8, randomness: 0 };
+    if (botRating <= 2000) return { depth: 10, randomness: 0 };
+    return { depth: 12, randomness: 0 };
+  };
+
+  // Replace all uses of 'difficulty' with the new settings
+  const botSettings = getBotSettings(botRating || 800);
+
+  // Update makeBotMove to use randomness
   const makeBotMove = () => {
     if (!stockfishRef.current || chess.isGameOver()) return;
     setIsBotThinking(true);
     stockfishRef.current.postMessage('uci');
     stockfishRef.current.postMessage('ucinewgame');
     stockfishRef.current.postMessage(`position fen ${chess.fen()}`);
-    stockfishRef.current.postMessage(`go depth ${difficulty}`);
+    if (botSettings.randomness > 0) {
+      stockfishRef.current.postMessage('setoption name MultiPV value 3');
+    }
+    stockfishRef.current.postMessage(`go depth ${botSettings.depth}`);
+    let moves: string[] = [];
     stockfishRef.current.onmessage = (event) => {
       const line = event.data;
+      if (typeof line === 'string' && line.startsWith('info') && botSettings.randomness > 0) {
+        const moveMatch = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
+        const multipvMatch = line.match(/multipv (\d+)/);
+        if (moveMatch && multipvMatch) {
+          const idx = parseInt(multipvMatch[1], 10) - 1;
+          moves[idx] = moveMatch[1];
+        }
+      }
       if (typeof line === 'string' && line.startsWith('bestmove')) {
-        const move = line.split(' ')[1];
+        let move = line.split(' ')[1];
+        // For low-rated bots, pick randomly from top moves
+        if (botSettings.randomness > 0 && moves.length > 1) {
+          const pick = Math.floor(Math.random() * Math.min(botSettings.randomness, moves.length));
+          move = moves[pick] || move;
+        }
         if (move && move !== '(none)') {
           setChess(prev => {
             const updated = new Chess();
@@ -287,10 +338,95 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
     return move ? move.san : uciMove;
   };
 
+  // Helper to update achievements in localStorage
+  const updateAchievements = () => {
+    if (!botName) return;
+    let achievements: Record<string, string[]> = { unlocked: [], beaten: [] };
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) achievements = JSON.parse(data) as Record<string, string[]>;
+    let updated = false;
+
+    // Track rating and total wins
+    let rating = Number(localStorage.getItem('userRating') || '800');
+    let totalWins = Number(localStorage.getItem('totalWins') || '0');
+    // Mark as beaten if user wins
+    if (!achievements.beaten.includes(botName) && chess.isCheckmate() && !isMyTurn) {
+      achievements.beaten.push(botName);
+      updated = true;
+      showToast(`You beat ${botName}!`, 'success');
+      // Increase rating and total wins
+      rating += 50;
+      totalWins += 1;
+      localStorage.setItem('userRating', rating.toString());
+      localStorage.setItem('totalWins', totalWins.toString());
+    }
+    // Unlock bots based on criteria
+    if (!achievements.unlocked.includes('John') && achievements.beaten.includes('Martin')) {
+      achievements.unlocked.push('John');
+      updated = true;
+      showToast('Unlocked John!', 'info');
+    }
+    if (!achievements.unlocked.includes('Kate') && achievements.beaten.includes('Maria')) {
+      achievements.unlocked.push('Kate');
+      updated = true;
+      showToast('Unlocked Kate!', 'info');
+    }
+    // Unlock T-Rex at 1000 rating
+    if (!achievements.unlocked.includes('T-Rex') && rating >= 1000) {
+      achievements.unlocked.push('T-Rex');
+      updated = true;
+      showToast('Unlocked T-Rex (1000 rating)!', 'info');
+    }
+    // Unlock Pablo at 1500 rating
+    if (!achievements.unlocked.includes('Pablo') && rating >= 1500) {
+      achievements.unlocked.push('Pablo');
+      updated = true;
+      showToast('Unlocked Pablo (1500 rating)!', 'info');
+    }
+    // Unlock Alex at 10 total wins
+    if (!achievements.unlocked.includes('Alex') && totalWins >= 10) {
+      achievements.unlocked.push('Alex');
+      updated = true;
+      showToast('Unlocked Alex (10 total wins)!', 'info');
+    }
+    // Add more unlock logic as needed...
+    if (updated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements));
+    }
+  };
+
+  // Call updateAchievements when game is over
+  useEffect(() => {
+    if (chess.isGameOver()) {
+      updateAchievements();
+    }
+    // eslint-disable-next-line
+  }, [chess.fen()]);
+
   // Place debug log here, outside of JSX
   console.log('showGameOverModal:', showGameOverModal);
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-amber-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 transition-colors duration-300">
+      {/* Toast Notifications */}
+      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center space-y-2">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`px-6 py-3 rounded-xl shadow-lg font-semibold text-white animate-fade-in-out ${toast.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}
+            style={{ minWidth: 220, textAlign: 'center' }}
+          >
+            {toast.message}
+          </div>
+        ))}
+      </div>
+      {/* Bot Info */}
+      {botAvatar && (
+        <div className="flex flex-col items-center mb-4">
+          <img src={botAvatar} alt={botName} className="w-20 h-20 rounded-full border-4 border-amber-400 shadow-lg mb-2" />
+          <div className="text-lg font-bold text-slate-900 dark:text-amber-200">{botName} {botFlag && <span className="ml-1">{botFlag}</span>}</div>
+          {botRating && <div className="text-sm text-slate-500 dark:text-amber-100">Rating: {botRating}</div>}
+        </div>
+      )}
       {/* Draw and Resign Buttons */}
       <div className="flex gap-4 mb-4">
         <button
@@ -311,7 +447,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
       {/* Main Layout: Controls, Eval bar, Board, Move History */}
       <div className="flex flex-row items-start justify-center gap-6 w-full max-w-5xl">
         {/* Controls Column (left of board) */}
-        <div className="flex flex-col items-center w-[480px] mb-4">
+        <div className="flex flex-col items-center w-[20rem] h-[36rem] mb-4 justify-center">
           <div className="w-full flex flex-col gap-4 bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 border border-slate-200 dark:border-slate-700 mb-4">
             <div className="flex items-center gap-2 justify-between w-full">
               <label className="font-semibold text-slate-900 dark:text-amber-200">Bot Difficulty:</label>
@@ -360,15 +496,17 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           </div>
         </div>
         {/* Chess Board and Suggestions */}
-        <div className="flex flex-col items-center">
-          <ChessBoard
-            chess={chess}
-            onMove={isMyTurn && !chess.isGameOver() ? handleMove : () => {}}
-            isGameOver={chess.isGameOver()}
-            boardTheme={boardTheme}
-            isFlipped={playerColor === 'b'}
-            isMyTurn={isMyTurn && !chess.isGameOver()}
-          />
+        <div className="flex flex-col items-center justify-center">
+          <div className="shadow-2xl rounded-lg">
+            <ChessBoard
+              chess={chess}
+              onMove={isMyTurn && !chess.isGameOver() ? handleMove : () => {}}
+              isGameOver={chess.isGameOver()}
+              boardTheme={boardTheme}
+              isFlipped={playerColor === 'b'}
+              isMyTurn={isMyTurn && !chess.isGameOver()}
+            />
+          </div>
           {showSuggestion && isMyTurn && suggestedMove && suggestedMove !== '...' && (
             <div className="mt-2 text-center w-[480px]">
               <span className="inline-block bg-amber-500 text-white font-mono font-bold px-4 py-2 rounded-lg shadow-lg animate-pulse w-full">
@@ -386,13 +524,13 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
             <div className="mt-4 text-center text-red-600 dark:text-red-400 font-bold w-[480px]">Game Over: {chess.isCheckmate() ? (isMyTurn ? 'Bot wins!' : 'You win!') : 'Draw'}</div>
           )}
           {showSuggestion && isMyTurn && topMoves && topMoves.length > 0 && (
-            <div className="mt-2 text-center w-[480px]">
-              <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-4 py-2 w-full">
-                <span className="font-semibold text-slate-700 dark:text-amber-200 mr-2">Top 3 moves:</span>
-                <ul className="flex flex-row gap-3 justify-center items-center">
+            <div className="mt-2 text-center w-72 mx-auto">
+              <div className="inline-block bg-white/90 dark:bg-slate-800 rounded-lg shadow px-2 py-1 w-full">
+                <span className="font-semibold text-slate-700 dark:text-amber-200 mr-2 text-sm">Top 3 moves:</span>
+                <ul className="flex flex-row gap-2 justify-center items-center">
                   {topMoves.map((m, i) => (
                     <li key={i} className="flex flex-col items-center">
-                      <span className={`font-mono font-bold px-2 py-1 rounded-lg ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'}`}>{uciToSan(m.move)}</span>
+                      <span className={`font-mono font-bold px-2 py-0.5 rounded ${i === 0 ? 'bg-amber-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-amber-100'} text-sm`}>{uciToSan(m.move)}</span>
                       <span className="text-xs text-slate-500 dark:text-amber-200">{m.eval !== null ? (m.eval > 99 ? '#M' : m.eval < -99 ? '#M' : m.eval.toFixed(2)) : '--'}</span>
                     </li>
                   ))}
@@ -402,7 +540,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack }) =
           )}
         </div>
         {/* Move History - same width as controls/board */}
-        <div className="flex flex-col items-center w-[480px] mx-auto">
+        <div className="flex flex-col items-center w-[20rem] h-[36rem] mx-auto">
           <MoveHistoryBox chess={chess} />
         </div>
       </div>

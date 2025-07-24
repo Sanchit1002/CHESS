@@ -20,6 +20,7 @@ interface ChessPieceProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   isAnimating?: boolean;
+  className?: string;
 }
 
 const pieceImages: Record<string, string> = {
@@ -34,7 +35,8 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
   draggable = false,
   onDragStart,
   onDragEnd,
-  isAnimating = false
+  isAnimating = false,
+  className = ''
 }) => {
   const imgSrc = pieceImages[piece];
 
@@ -43,11 +45,12 @@ export const ChessPiece: React.FC<ChessPieceProps> = ({
       src={imgSrc}
       alt={piece}
       className={`
-        absolute inset-0 w-full h-full object-contain select-none pointer-events-none
+        w-full h-full object-contain select-none
         transition-all duration-150 ease-out
         ${isSelected ? 'scale-110 drop-shadow-lg z-10' : ''}
         ${isAnimating ? 'scale-105 drop-shadow-xl z-20' : ''}
         hover:scale-105 hover:drop-shadow-md
+        ${className}
       `}
       draggable={draggable}
       onMouseDown={onMouseDown}
