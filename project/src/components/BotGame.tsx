@@ -27,7 +27,7 @@ const MoveHistoryBox: React.FC<{ chess: Chess }> = ({ chess }) => {
     });
   }
   return (
-    <div className="bg-white/80 dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-4 w-[480px] max-h-96 overflow-y-auto mx-auto">
+    <div className="bg-white/80 dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-4 w-72 max-h-96 overflow-y-auto">
       <h3 className="text-lg font-bold text-slate-800 dark:text-amber-200 mb-2 text-center">Move History</h3>
       {groupedMoves.length === 0 ? (
         <div className="text-center text-slate-400 py-6">No moves yet</div>
