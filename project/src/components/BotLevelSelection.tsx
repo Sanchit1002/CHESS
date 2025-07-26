@@ -6,7 +6,7 @@ const BOT_LEVELS = [
     label: 'Beginner',
     difficulty: 4,
     bots: [
-      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/DymJRLRV/tirthaa.jpg', locked: false, unlockCriteria: '', personality: 'Calm and Defensive', beaten: true },
+      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/qq9rvjBb/tirthaaa.jpg', locked: false, unlockCriteria: '', personality: 'Calm and Defensive', beaten: true },
       { name: 'Kabir', rating: 800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Anna', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
       { name: 'Madhur', rating: 1000, img: 'https://i.postimg.cc/mrhTgyNR/madhur.jpg', locked: false, unlockCriteria: '', personality: 'Aggressive Opener', beaten: false },
     ],
@@ -24,8 +24,8 @@ const BOT_LEVELS = [
     label: 'Master',
     difficulty: 15,
     bots: [
-      { name: 'Sakshi', rating: 1800, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', locked: false, unlockCriteria: '', personality: 'Endgame Expert', beaten: false },
-      { name: 'Sanchit', rating: 2000, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky Tactician', beaten: false },
+      { name: 'Sanchit', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky Tactician', beaten: false },
+      { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', locked: false, unlockCriteria: '', personality: 'Endgame Expert', beaten: false },
       { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', locked: false, unlockCriteria: '', personality: 'World Champion', beaten: false },
     ],
   },
