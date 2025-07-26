@@ -445,9 +445,9 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
         </button>
       </div>
       {/* Main Layout: Controls, Eval bar, Board, Move History */}
-      <div className="flex flex-row items-start justify-center gap-6 w-full max-w-5xl">
+      <div className="flex flex-col lg:flex-row items-start justify-center gap-4 lg:gap-6 w-full max-w-5xl px-2">
         {/* Controls Column (left of board) */}
-        <div className="flex flex-col items-center w-[20rem] h-[36rem] mb-4 justify-center">
+        <div className="flex flex-col items-center w-full max-w-xs lg:w-[20rem] lg:h-[36rem] mb-4 justify-center">
           <div className="w-full flex flex-col gap-4 bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 border border-slate-200 dark:border-slate-700 mb-4">
             <div className="flex items-center gap-2 justify-between w-full">
               <label className="font-semibold text-slate-900 dark:text-amber-200">Bot Difficulty:</label>
@@ -496,8 +496,8 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
           </div>
         </div>
         {/* Chess Board and Suggestions */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="shadow-2xl rounded-lg">
+        <div className="flex flex-col items-center justify-center w-full">
+          <div className="shadow-2xl rounded-lg w-full max-w-[95vw] aspect-square lg:w-[36rem] lg:h-[36rem]">
             <ChessBoard
               chess={chess}
               onMove={isMyTurn && !chess.isGameOver() ? handleMove : () => {}}
@@ -540,7 +540,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
           )}
         </div>
         {/* Move History - same width as controls/board */}
-        <div className="flex flex-col items-center w-[20rem] h-[36rem] mx-auto">
+        <div className="flex flex-col items-center w-full max-w-xs lg:w-[20rem] lg:h-[36rem] mx-auto">
           <MoveHistoryBox chess={chess} />
         </div>
       </div>
