@@ -24,7 +24,7 @@ const BOT_LEVELS = [
     label: 'Master',
     difficulty: 15,
     bots: [
-      { name: 'Sanchit', rating: 1800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Sophia', locked: false, unlockCriteria: '', personality: 'Tricky Tactician', beaten: false },
+      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Ls550QWw/sanchitk.jpg', locked: false, unlockCriteria: '', personality: 'Tricky Tactician', beaten: false },
       { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', locked: false, unlockCriteria: '', personality: 'Endgame Expert', beaten: false },
       { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', locked: false, unlockCriteria: '', personality: 'World Champion', beaten: false },
     ],
@@ -72,7 +72,7 @@ const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
                     onMouseLeave={() => setTooltip(null)}
                     disabled={false}
                   >
-                    <div className={`w-14 h-14 lg:w-16 lg:h-16 rounded-full border-4 flex items-center justify-center mb-2 transition-all duration-200 border-amber-400 shadow-lg group-hover:shadow-amber-400/50 group-hover:animate-avatar-pulse`}>
+                    <div className={`w-14 h-14 lg:w-16 lg:h-16 rounded-full border-4 flex items-center justify-center mb-2 transition-all duration-200 border-amber-400 shadow-lg`}>
                       <img src={bot.img} alt={bot.name} className="w-10 h-10 lg:w-12 lg:h-12 rounded-full" />
                     </div>
                     <span
