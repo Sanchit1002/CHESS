@@ -6,8 +6,8 @@ const BOT_LEVELS = [
     label: 'Beginner',
     difficulty: 4,
     bots: [
-      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/qq9rvjBb/tirthaaa.jpg', locked: false, unlockCriteria: '', personality: 'Calm and Defensive', beaten: true },
-      { name: 'Kabir', rating: 800, img: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Anna', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
+      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/nL3bs9yB/tirthaaaa.jpg', locked: false, unlockCriteria: '', personality: 'Calm and Defensive', beaten: true },
+      { name: 'Kabir', rating: 800, img: 'https://i.postimg.cc/qBwDpYwW/kabir-photo.jpg', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
       { name: 'Madhur', rating: 1000, img: 'https://i.postimg.cc/mrhTgyNR/madhur.jpg', locked: false, unlockCriteria: '', personality: 'Aggressive Opener', beaten: false },
     ],
   },
