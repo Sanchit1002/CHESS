@@ -49,21 +49,14 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
   // --- Derived State (from roomData) ---
   const game = useMemo(() => {
-    const newGame = new Chess();
-    // Get the moves array from your Firestore data
+    const fen = roomData?.gameState?.fen;
+    const newGame = new Chess(fen);
     const moves = roomData?.gameState?.moves || [];
-
-    // Replay each move to build up the game state AND history
-    moves.forEach((move: string) => {
-      try {
-        newGame.move(move);
-      } catch (e) {
-        console.error("Error replaying move:", move, e);
-      }
-    });
-    
+    if (newGame.history().length === 0 && moves.length > 0) {
+        newGame.loadPgn(moves.join('\n'));
+    }
     return newGame;
-  }, [roomData?.gameState?.moves]); // Dependency ensures this only re-runs when moves change
+  }, [roomData?.gameState?.fen, roomData?.gameState?.moves]);
 
   const gameStatus = useMemo(() => roomData?.status || 'loading', [roomData?.status]);
   const playerColor = useMemo(() => {
@@ -73,7 +66,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
   const isMyTurn = useMemo(() => {
     if (isSpectator || !playerColor) return false;
-    return game.turn() === playerColor.charAt(0); // Compare 'w' or 'b'
+    return game.turn() === playerColor.charAt(0);
   }, [game, playerColor, isSpectator]);
   
   const drawOffer = useMemo(() => roomData?.gameState?.drawOffer, [roomData?.gameState?.drawOffer]);
@@ -109,18 +102,15 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   // --- Game Actions ---
   const handleMove = async (move: Move) => {
     if (!isMyTurn) return;
-    
     const tempGame = new Chess(game.fen());
     const result = tempGame.move(move);
     if (!result) return;
-
     const newStatus = tempGame.isGameOver() ? 'finished' : 'playing';
-    
     await updateDoc(doc(db, 'gameRooms', roomId), {
       'gameState.fen': tempGame.fen(),
       'gameState.lastMove': { from: move.from, to: move.to },
       'status': newStatus,
-      'gameState.moves': arrayUnion(result.san), // Safely add the move
+      'gameState.moves': arrayUnion(result.san),
     });
   };
 
@@ -181,7 +171,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 text-white p-4 lg:p-6 flex flex-col">
-        <div className="max-w-screen-xl w-full mx-auto">
+        {/* Header Section */}
+        <div className="max-w-screen-2xl w-full mx-auto">
             <div className="flex items-center justify-between mb-4">
                 <button onClick={onBack} className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"><ArrowLeft size={20} /><span>Lobby</span></button>
                 <div className="text-center">
@@ -195,6 +186,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
         </div>
 
+        {/* Waiting Screen */}
         {gameStatus === 'waiting' && (
             <div className="flex-grow flex items-center justify-center">
                 <div className="text-center py-20 bg-slate-800/50 rounded-lg w-full max-w-md">
@@ -204,20 +196,24 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
         )}
 
+        {/* Main Game Layout */}
         {gameStatus !== 'waiting' && (
             <div className="flex-grow flex items-center justify-center">
-                <div className="grid grid-cols-1 xl:grid-cols-[300px_1fr_300px] gap-6 w-full max-w-screen-xl items-start">
+                {/* MODIFIED: This layout now exactly mirrors the structure of BotGame.tsx */}
+                <div className="flex flex-col lg:flex-row items-start justify-center gap-6 w-full max-w-7xl px-4">
                     
-                    <div className="bg-slate-800/60 rounded-xl p-4 space-y-4 backdrop-blur-sm border border-slate-700/50">
+                    {/* Left Column (Game Info) */}
+                    <div className="w-full lg:w-[300px] flex-shrink-0 bg-slate-800/60 rounded-xl p-4 space-y-4 backdrop-blur-sm border border-slate-700/50">
                         <h3 className="font-bold text-lg text-slate-300 px-2">Game Info</h3>
                         <GameStatus chess={game} />
                         <h3 className="font-bold text-lg text-slate-300 px-2 pt-2 border-t border-slate-700/50">Move History</h3>
                         <MoveHistory chess={game} />
                     </div>
 
-                    <div className="flex flex-col justify-center items-center gap-3">
+                    {/* Center Column (Chessboard) */}
+                    <div className="flex flex-col items-center justify-center w-full">
                         <PlayerInfo name={blackPlayer} isWhite={false} />
-                        <div className="w-full max-w-[75vh] lg:max-w-[calc(100vh-200px)] aspect-square relative shadow-2xl">
+                        <div className="w-full max-w-[75vh] lg:max-w-[calc(100vh-220px)] aspect-square relative shadow-2xl my-3">
                             <ChessBoard chess={game} onMove={handleMove} isFlipped={playerColor === 'black'} />
                             {gameStatus === 'finished' && (
                                 <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center rounded-lg backdrop-blur-sm">
@@ -231,7 +227,8 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
                         <PlayerInfo name={whitePlayer} isWhite={true} />
                     </div>
 
-                    <div className="flex flex-col gap-4">
+                    {/* Right Column (Chat & Actions) */}
+                    <div className="w-full lg:w-[300px] flex-shrink-0 flex flex-col gap-4">
                         <div className="bg-slate-800/60 rounded-xl flex flex-col border border-slate-700/50 backdrop-blur-sm">
                             <h3 className="font-bold text-lg text-slate-300 p-4 border-b border-slate-700/50">Chat</h3>
                             <Chat messages={messages} newMessage={newMessage} onMessageChange={setNewMessage} onSendMessage={sendMessage} disabled={isSpectator} />
@@ -247,6 +244,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
         )}
 
+        {/* Draw Offer Modal */}
         {showDrawModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center border border-blue-500">

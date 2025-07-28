@@ -81,21 +81,23 @@ export const BoardThemes: React.FC<BoardThemesProps> = ({ currentTheme, onThemeC
         <h3 className="text-lg font-bold text-gray-800">Board Themes</h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* MODIFIED: Increased gap from gap-3 to gap-4 */}
+      <div className="grid grid-cols-2 gap-4">
         {BOARD_THEMES.map((theme) => (
           <button
             key={theme.id}
             onClick={() => onThemeChange(theme.id)}
-            className={`p-3 rounded-lg border-2 transition-all ${
+            // MODIFIED: Removed unnecessary 'relative' class
+            className={`p-3 rounded-lg border transition-all duration-200 transform shadow-md ${
               currentTheme === theme.id
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-amber-500 bg-amber-50 scale-110 shadow-xl z-10'
+                : 'border-gray-200 bg-white hover:border-amber-400 hover:shadow-xl hover:scale-105'
             }`}
           >
             <div className="flex items-center space-x-2 mb-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: theme.lightSquare }}></div>
               <div className="w-4 h-4 rounded" style={{ backgroundColor: theme.darkSquare }}></div>
-              <span className="text-sm font-medium">{theme.name}</span>
+              <span className="text-sm font-medium text-gray-800">{theme.name}</span>
             </div>
             <div className="grid grid-cols-4 gap-1">
               <div className="w-3 h-3 rounded" style={{ backgroundColor: theme.lightSquare }}></div>
@@ -116,22 +118,22 @@ export const BoardThemes: React.FC<BoardThemesProps> = ({ currentTheme, onThemeC
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded bg-blue-500"></div>
-            <span>Selected Square</span>
+            <span className="text-gray-600">Selected Square</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded bg-green-500"></div>
-            <span>Valid Move</span>
+            <span className="text-gray-600">Valid Move</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded bg-yellow-500"></div>
-            <span>Last Move</span>
+            <span className="text-gray-600">Last Move</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 rounded bg-red-500"></div>
-            <span>Check</span>
+            <span className="text-gray-600">Check</span>
           </div>
         </div>
       </div>
     </div>
   );
-}; 
+};

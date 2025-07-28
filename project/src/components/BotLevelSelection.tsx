@@ -47,11 +47,12 @@ const LEVEL_THEMES = {
 
 interface BotLevelSelectionProps {
   onSelect: (bot: any) => void;
+  onBack: () => void;
 }
 
 const STORAGE_KEY = 'botAchievements';
 
-const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
+const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect, onBack }) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
   const [achievements, setAchievements] = useState<{ beaten: string[] }>({ beaten: [] });
 
@@ -71,7 +72,17 @@ const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
   const isBeaten = (botName: string) => achievements.beaten.includes(botName);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-8 relative">
+      {/* Back Button Position Updated Here */}
+      <div className="absolute top-4 left-6 z-10">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-300"
+        >
+          Back to Menu
+        </button>
+      </div>
+      
       <h1 className="font-extrabold mb-12 text-center bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-4xl lg:text-5xl">Choose Your Opponent</h1>
       <div className="flex flex-col lg:flex-row gap-12 w-full max-w-6xl mx-auto items-center justify-center">
         {BOT_LEVELS.map(level => {
@@ -99,7 +110,7 @@ const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
                       <button
                         key={bot.name}
                         className="flex flex-col items-center focus:outline-none transition-transform duration-200 hover:scale-110"
-                        onClick={() => onSelect({ ...bot, difficulty: level.difficulty, level: level.label })}
+                        onClick={() => onSelect({ ...bot, difficulty: 4, level: level.label })}
                         onMouseEnter={e => setTooltip({ x: e.clientX, y: e.clientY, text: `${bot.personality}${beaten ? ' (Beaten ✅)' : ''}` })}
                         onMouseLeave={() => setTooltip(null)}
                       >

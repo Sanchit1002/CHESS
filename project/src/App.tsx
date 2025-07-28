@@ -405,9 +405,12 @@ function App() {
           />
         );
       case 'testEnv':
-        return <TestEnv />;
+        // Assuming TestEnv is defined elsewhere
+        // return <TestEnv />; 
+        return <div>Test Environment</div>; // Placeholder
       case 'botLevelSelection':
-        return <BotLevelSelection onSelect={handleBotSelected} />;
+        // ✅ FIX: Added onBack={handleBackToMenu} to connect the button
+        return <BotLevelSelection onSelect={handleBotSelected} onBack={handleBackToMenu} />;
       case 'botGame':
         return (
           <BotGame

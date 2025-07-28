@@ -39,7 +39,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
   useEffect(() => {
     const roomsRef = collection(db, 'gameRooms');
-    const q = query(roomsRef, where('status', '!=', 'finished'), orderBy('status'), orderBy('createdAt', 'desc'));
+    const q = query(roomsRef, where('status', 'in', ['waiting', 'playing']), orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const roomsData: GameRoom[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameRoom));
@@ -146,16 +146,18 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
   return (
     <>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-slate-800 p-8 text-white">
+      <div className="min-h-screen relative flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-slate-800 p-8 text-white">
+        
+        <button onClick={onBack} className="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors z-10">
+            <ArrowLeft size={20} />
+            <span>Back</span>
+        </button>
+
         <div className="w-full max-w-6xl">
-          {/* MODIFIED: This container now perfectly centers the title */}
-          <div className="relative flex items-center justify-center mb-12">
-              <button onClick={onBack} className="absolute left-0 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                  <ArrowLeft size={20} />
-                  <span>Back</span>
-              </button>
-              <h1 className="font-extrabold text-center bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-3xl lg:text-4xl">Play a Friend</h1>
-              <div className="absolute right-0 w-auto text-right text-gray-400">Welcome, {username}</div>
+          <div className="text-center mb-12">
+            <h1 className="font-extrabold bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-3xl lg:text-4xl">Play a Friend</h1>
+            {/* MODIFIED: Added font-bold class */}
+            <p className="text-gray-400 mt-2 font-bold">Welcome, {username}</p>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-10 w-full max-w-4xl mx-auto mb-16">
@@ -170,31 +172,31 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               </div>
 
               <div className="flex-1 bg-slate-800/80 rounded-2xl shadow-2xl border border-slate-700 p-8 flex flex-col items-center justify-between transition-all duration-300 hover:border-amber-500 hover:shadow-[0_0_20px_0px_rgba(245,158,11,0.3)] min-h-[260px] hover:-translate-y-1">
-                {isJoining ? (
-                  <>
-                    <div className="text-center w-full">
-                        <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
-                        <p className="text-gray-400">Enter a code to join a friend's game.</p>
-                    </div>
-                    <form onSubmit={handleJoinByCode} className="w-full flex flex-col gap-4 mt-6">
-                        <input autoFocus type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ENTER GAME CODE" className="w-full bg-gray-900 border-2 border-slate-600 rounded-lg text-center font-mono text-lg tracking-widest p-3 focus:border-amber-500 focus:ring-amber-500 focus:outline-none transition-colors" />
-                        {joinError && <p className="text-red-500 text-xs text-center">{joinError}</p>}
-                        <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200" disabled={!joinCode.trim() || loading}>
-                            {loading ? 'Joining...' : 'Confirm Join'}
-                        </button>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-center">
-                        <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
-                        <p className="text-gray-400">Enter a code to join a friend's game.</p>
-                    </div>
-                    <button onClick={() => setIsJoining(true)} className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200">
-                        Join Game
-                    </button>
-                  </>
-                )}
+                  {isJoining ? (
+                    <>
+                      <div className="text-center w-full">
+                          <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                          <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                      </div>
+                      <form onSubmit={handleJoinByCode} className="w-full flex flex-col gap-4 mt-6">
+                          <input autoFocus type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ENTER GAME CODE" className="w-full bg-gray-900 border-2 border-slate-600 rounded-lg text-center font-mono text-lg tracking-widest p-3 focus:border-amber-500 focus:ring-amber-500 focus:outline-none transition-colors" />
+                          {joinError && <p className="text-red-500 text-xs text-center">{joinError}</p>}
+                          <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200" disabled={!joinCode.trim() || loading}>
+                              {loading ? 'Joining...' : 'Confirm Join'}
+                          </button>
+                      </form>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-center">
+                          <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                          <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                      </div>
+                      <button onClick={() => setIsJoining(true)} className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200">
+                          Join Game
+                      </button>
+                    </>
+                  )}
               </div>
           </div>
 
@@ -216,7 +218,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
                                     <span className="font-semibold">{room.createdBy}'s</span> Game
                                 </p>
                                 <span className={`text-xs font-bold px-2 py-1 rounded-full ${room.status === 'waiting' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}>
-                                  {room.status}
+                                    {room.status}
                                 </span>
                             </div>
                             <h3 className="text-2xl font-mono font-bold text-amber-400 tracking-widest mb-4">{room.roomCode}</h3>

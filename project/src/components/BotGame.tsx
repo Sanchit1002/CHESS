@@ -57,10 +57,10 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
   const [chess, setChess] = useState(new Chess());
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [playerColor, setPlayerColor] = useState<'w' | 'b'>('w');
-  const [difficulty, setDifficulty] = useState<number>(initialDifficulty ?? 8); // Use prop if provided
+  const [difficulty, setDifficulty] = useState<number>(initialDifficulty ?? 8);
   const [showSuggestion, setShowSuggestion] = useState(false);
   const [suggestedMove, setSuggestedMove] = useState<string | null>(null);
-  const [evaluation, setEvaluation] = useState<number | null>(null); // Stockfish eval
+  const [evaluation, setEvaluation] = useState<number | null>(null);
   const [topMoves, setTopMoves] = useState<Array<{ move: string; eval: number | null }> | null>(null);
   const stockfishRef = useRef<Worker | null>(null);
   const suggestionStockfishRef = useRef<Worker | null>(null);
@@ -70,7 +70,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
   const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'info' }[]>([]);
   const toastId = useRef(0);
 
-  // Helper to show toast
   const showToast = (message: string, type: 'success' | 'info' = 'success') => {
     const id = ++toastId.current;
     setToasts((prev) => [...prev, { id, message, type }]);
@@ -126,50 +125,24 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     // eslint-disable-next-line
   }, [chess.fen(), isMyTurn]);
 
-  // Helper to get bot depth and randomness based on rating
-  const getBotSettings = (botRating: number) => {
-    if (botRating <= 800) return { depth: 1, randomness: 2 }; // pick randomly from top 2 moves
-    if (botRating <= 1000) return { depth: 2, randomness: 2 }; // pick randomly from top 2 moves
-    if (botRating <= 1200) return { depth: 3, randomness: 1 }; // sometimes pick 2nd best
-    if (botRating <= 1400) return { depth: 4, randomness: 0 }; // always best
-    if (botRating <= 1600) return { depth: 6, randomness: 0 };
-    if (botRating <= 1800) return { depth: 8, randomness: 0 };
-    if (botRating <= 2000) return { depth: 10, randomness: 0 };
-    return { depth: 12, randomness: 0 };
-  };
+  // NOTE: This function is not used for bot moves, only for suggestions
+  // const getBotSettings = (botRating: number) => { ... };
+  // const botSettings = getBotSettings(botRating || 800);
 
-  // Replace all uses of 'difficulty' with the new settings
-  const botSettings = getBotSettings(botRating || 800);
-
-  // Update makeBotMove to use randomness
   const makeBotMove = () => {
     if (!stockfishRef.current || chess.isGameOver()) return;
     setIsBotThinking(true);
     stockfishRef.current.postMessage('uci');
     stockfishRef.current.postMessage('ucinewgame');
     stockfishRef.current.postMessage(`position fen ${chess.fen()}`);
-    if (botSettings.randomness > 0) {
-      stockfishRef.current.postMessage('setoption name MultiPV value 3');
-    }
-    stockfishRef.current.postMessage(`go depth ${botSettings.depth}`);
-    let moves: string[] = [];
+    
+    // The dropdown now controls the bot's strength via 'depth'
+    stockfishRef.current.postMessage(`go depth ${difficulty}`);
+
     stockfishRef.current.onmessage = (event) => {
       const line = event.data;
-      if (typeof line === 'string' && line.startsWith('info') && botSettings.randomness > 0) {
-        const moveMatch = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
-        const multipvMatch = line.match(/multipv (\d+)/);
-        if (moveMatch && multipvMatch) {
-          const idx = parseInt(multipvMatch[1], 10) - 1;
-          moves[idx] = moveMatch[1];
-        }
-      }
       if (typeof line === 'string' && line.startsWith('bestmove')) {
-        let move = line.split(' ')[1];
-        // For low-rated bots, pick randomly from top moves
-        if (botSettings.randomness > 0 && moves.length > 1) {
-          const pick = Math.floor(Math.random() * Math.min(botSettings.randomness, moves.length));
-          move = moves[pick] || move;
-        }
+        const move = line.split(' ')[1];
         if (move && move !== '(none)') {
           setChess(prev => {
             const updated = new Chess();
@@ -239,7 +212,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     suggestionStockfishRef.current.onmessage = (event) => {
       const line = event.data;
       if (typeof line === 'string' && line.startsWith('info')) {
-        // Parse multipv info lines
         const multipvMatch = line.match(/multipv (\d+)/);
         const moveMatch = line.match(/ pv ([a-h][1-8][a-h][1-8][qrbn]?)/);
         const evalMatch = line.match(/score (cp|mate) (-?\d+)/);
@@ -256,7 +228,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
         }
       }
       if (typeof line === 'string' && line.startsWith('bestmove')) {
-        // Only keep up to 3 moves
         setTopMoves(moves.slice(0, 3));
       }
     };
@@ -274,26 +245,20 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
   }, [showSuggestion, chess.fen(), isMyTurn, difficulty]);
 
   useEffect(() => {
-    getEvaluation();
+    if (chess.history().length > 0) {
+      getEvaluation();
+    } else {
+      setEvaluation(null);
+    }
     // eslint-disable-next-line
   }, [chess.fen()]);
 
-  // Show modal when game is over
   useEffect(() => {
-    console.log('Checking game over:', chess.isGameOver(), chess.fen());
     if (chess.isGameOver()) {
       setShowGameOverModal(true);
-      console.log('Game over modal should show!');
     }
   }, [chess.fen()]);
 
-  let evalBarPercent = 50;
-  if (evaluation !== null) {
-    const cappedEval = Math.max(-10, Math.min(10, evaluation));
-    evalBarPercent = 50 + (cappedEval * 5);
-  }
-
-  // Add handlers for draw and resign
   const handleDraw = () => {
     setManualGameOver('draw');
     setShowGameOverModal(true);
@@ -303,7 +268,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     setShowGameOverModal(true);
   };
 
-  // Update getGameOverMessage to handle manualGameOver
   const getGameOverMessage = () => {
     if (manualGameOver === 'draw') {
       return { msg: 'Draw!', icon: <Handshake size={48} className="text-blue-400 mb-2" />, color: 'text-blue-500' };
@@ -326,7 +290,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     setManualGameOver(null);
   };
 
-  // Helper to convert UCI move to SAN
   const uciToSan = (uciMove: string) => {
     const tempChess = new Chess(chess.fen());
     const moveObj = {
@@ -338,7 +301,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     return move ? move.san : uciMove;
   };
 
-  // Helper to update achievements in localStorage
   const updateAchievements = () => {
     if (!botName) return;
     let achievements: Record<string, string[]> = { unlocked: [], beaten: [] };
@@ -346,56 +308,47 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     if (data) achievements = JSON.parse(data) as Record<string, string[]>;
     let updated = false;
 
-    // Track rating and total wins
     let rating = Number(localStorage.getItem('userRating') || '800');
     let totalWins = Number(localStorage.getItem('totalWins') || '0');
-    // Mark as beaten if user wins
     if (!achievements.beaten.includes(botName) && chess.isCheckmate() && !isMyTurn) {
       achievements.beaten.push(botName);
       updated = true;
       showToast(`You beat ${botName}!`, 'success');
-      // Increase rating and total wins
       rating += 50;
       totalWins += 1;
       localStorage.setItem('userRating', rating.toString());
       localStorage.setItem('totalWins', totalWins.toString());
     }
-    // Unlock bots based on criteria
-    if (!achievements.unlocked.includes('John') && achievements.beaten.includes('Martin')) {
+    if (!achievements.unlocked.includes('John') && achievements.beaten.includes('Madhur')) {
       achievements.unlocked.push('John');
       updated = true;
       showToast('Unlocked John!', 'info');
     }
-    if (!achievements.unlocked.includes('Kate') && achievements.beaten.includes('Maria')) {
+    if (!achievements.unlocked.includes('Kate') && achievements.beaten.includes('Adarsh')) {
       achievements.unlocked.push('Kate');
       updated = true;
       showToast('Unlocked Kate!', 'info');
     }
-    // Unlock T-Rex at 1000 rating
     if (!achievements.unlocked.includes('T-Rex') && rating >= 1000) {
       achievements.unlocked.push('T-Rex');
       updated = true;
       showToast('Unlocked T-Rex (1000 rating)!', 'info');
     }
-    // Unlock Pablo at 1500 rating
     if (!achievements.unlocked.includes('Pablo') && rating >= 1500) {
       achievements.unlocked.push('Pablo');
       updated = true;
       showToast('Unlocked Pablo (1500 rating)!', 'info');
     }
-    // Unlock Alex at 10 total wins
     if (!achievements.unlocked.includes('Alex') && totalWins >= 10) {
       achievements.unlocked.push('Alex');
       updated = true;
       showToast('Unlocked Alex (10 total wins)!', 'info');
     }
-    // Add more unlock logic as needed...
     if (updated) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements));
     }
   };
 
-  // Call updateAchievements when game is over
   useEffect(() => {
     if (chess.isGameOver()) {
       updateAchievements();
@@ -403,11 +356,44 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     // eslint-disable-next-line
   }, [chess.fen()]);
 
-  // Place debug log here, outside of JSX
-  console.log('showGameOverModal:', showGameOverModal);
+  const isStartingPosition = chess.history().length === 0;
+
+  let evalBarPercent = 50;
+  let evalDisplayElement: JSX.Element;
+
+  if (isStartingPosition) {
+    evalBarPercent = 50;
+    evalDisplayElement = <span>{(0.00).toFixed(2)}</span>;
+  } else if (evaluation !== null) {
+    const cappedEval = Math.max(-10, Math.min(10, evaluation));
+    evalBarPercent = 50 + (cappedEval * 5);
+    
+    let displayEval: string;
+    if (evaluation > 99) displayEval = '#M';
+    else if (evaluation < -99) displayEval = '#M';
+    else displayEval = evaluation.toFixed(2);
+    
+    let evalColorClass = '';
+    if (evaluation > 0.05) evalColorClass = 'text-amber-700';
+    else if (evaluation < -0.05) evalColorClass = 'text-slate-900 dark:text-amber-200';
+    
+    evalDisplayElement = <span className={evalColorClass}>{displayEval}</span>;
+  } else {
+    evalBarPercent = 50;
+    evalDisplayElement = <span className="text-slate-400">--</span>;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 transition-colors duration-300">
-      {/* Toast Notifications */}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 transition-colors duration-300 relative">
+      <div className="absolute top-4 left-6 z-10">
+        <button
+          onClick={onBack}
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-300"
+        >
+          Back to Menu
+        </button>
+      </div>
+
       <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center space-y-2">
         {toasts.map((toast) => (
           <div
@@ -419,15 +405,16 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
           </div>
         ))}
       </div>
+      
       {/* Bot Info */}
       {botAvatar && (
-        <div className="flex flex-col items-center mb-4">
+        <div className="flex flex-col items-center mb-4 pt-12">
           <img src={botAvatar} alt={botName} className="w-20 h-20 rounded-full border-4 border-amber-400 shadow-lg mb-2" />
           <div className="text-lg font-bold text-slate-900 dark:text-amber-200">{botName} {botFlag && <span className="ml-1">{botFlag}</span>}</div>
           {botRating && <div className="text-sm text-slate-500 dark:text-amber-100">Rating: {botRating}</div>}
         </div>
       )}
-      {/* Draw and Resign Buttons */}
+
       <div className="flex gap-4 mb-4">
         <button
           onClick={handleDraw}
@@ -444,9 +431,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
           Resign
         </button>
       </div>
-      {/* Main Layout: Controls, Eval bar, Board, Move History */}
       <div className="flex flex-col lg:flex-row items-start justify-center gap-4 lg:gap-6 w-full max-w-5xl px-2">
-        {/* Controls Column (left of board) */}
         <div className="flex flex-col items-center w-full max-w-xs lg:w-[20rem] lg:h-[36rem] mb-4 justify-center">
           <div className="w-full flex flex-col gap-4 bg-white/90 dark:bg-slate-800 rounded-xl shadow-md px-6 py-4 border border-slate-200 dark:border-slate-700 mb-4">
             <div className="flex items-center gap-2 justify-between w-full">
@@ -476,7 +461,6 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
               <span className="text-sm text-slate-700 dark:text-amber-200">(Best move for you)</span>
             </div>
           </div>
-          {/* Evaluation Bar - add margin to move downward */}
           <div className="flex flex-col items-center mt-8">
             <div className="h-80 w-7 bg-gradient-to-b from-white to-slate-400 dark:from-slate-200 dark:to-slate-900 rounded-lg border-2 border-amber-400 overflow-hidden relative">
               <div
@@ -485,17 +469,10 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
               ></div>
             </div>
             <div className="mt-2 text-xs text-center">
-              {evaluation !== null ? (
-                <span className={evaluation > 0 ? 'text-amber-700' : evaluation < 0 ? 'text-slate-900 dark:text-amber-200' : ''}>
-                  {evaluation > 99 ? '#M' : evaluation < -99 ? '#M' : evaluation.toFixed(2)}
-                </span>
-              ) : (
-                <span className="text-slate-400">--</span>
-              )}
+              {evalDisplayElement}
             </div>
           </div>
         </div>
-        {/* Chess Board and Suggestions */}
         <div className="flex flex-col items-center justify-center w-full">
           <div className="shadow-2xl rounded-lg w-full max-w-[95vw] aspect-square lg:w-[36rem] lg:h-[36rem]">
             <ChessBoard
@@ -539,14 +516,11 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
             </div>
           )}
         </div>
-        {/* Move History - same width as controls/board */}
         <div className="flex flex-col items-center w-full max-w-xs lg:w-[20rem] lg:h-[36rem] mx-auto">
           <MoveHistoryBox chess={chess} />
         </div>
       </div>
-      {/* Game Over Modal (always rendered at top level) */}
       {showGameOverModal && (
-        (() => { console.log('Rendering modal!'); return null; })(),
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center border-4 border-amber-400 animate-pop">
             {getGameOverMessage().icon}
@@ -571,4 +545,4 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
       )}
     </div>
   );
-}; 
+};

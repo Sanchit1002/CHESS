@@ -123,22 +123,22 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 relative">
+      
+      {/* Back Button Moved to Top-Left Corner and styled with a box */}
+      <button
+        onClick={onBack}
+        className="absolute top-4 left-8 flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-medium hover:border-amber-300 dark:hover:border-amber-400 z-10"
+      >
+        <ArrowLeft size={20} />
+        <span>Back</span>
+      </button>
+
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Choose Game Mode</h1>
-            <p className="text-gray-600 dark:text-white">Welcome back, {username}!</p>
-          </div>
-          <div className="w-24"></div> {/* Spacer for centering */}
+        <div className="text-center mb-8 pt-8">
+          <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Choose Game Mode</h1>
+          <p className="text-gray-600 dark:text-white">Welcome back, {username}</p>
         </div>
 
         {/* Game Mode Cards */}
@@ -296,4 +296,4 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
       )}
     </div>
   );
-}; 
+};
