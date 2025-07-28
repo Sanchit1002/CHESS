@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Play, Eye, Clock, Settings, ArrowLeft, Copy, Check } from 'lucide-react';
-import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
+import { Users, Eye, Clock, ArrowLeft, Copy, Check, Link, X } from 'lucide-react';
+import { collection, addDoc, onSnapshot, doc, updateDoc, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface GameRoom {
@@ -19,57 +19,40 @@ interface GameRoom {
 interface MultiplayerLobbyProps {
   onBack: () => void;
   onJoinGame: (roomId: string, isSpectator: boolean) => void;
-  onCreateGame: (timeControl: string, boardTheme: string) => void;
   username: string;
 }
 
 export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   onBack,
   onJoinGame,
-  onCreateGame,
   username
 }) => {
   const [rooms, setRooms] = useState<GameRoom[]>([]);
-  const [showCreateGame, setShowCreateGame] = useState(false);
-  const [selectedTimeControl, setSelectedTimeControl] = useState('blitz');
-  const [selectedBoardTheme, setSelectedBoardTheme] = useState('classic');
-  const [copiedRoomCode, setCopiedRoomCode] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showJoinByCode, setShowJoinByCode] = useState(false);
-  const [roomCodeToJoin, setRoomCodeToJoin] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedTimeControl, setSelectedTimeControl] = useState('10 + 5');
+  const [selectedBoardTheme, setSelectedBoardTheme] = useState('classic');
+  const [isJoining, setIsJoining] = useState(false);
 
-  // Generate a random room code
-  const generateRoomCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
-
-  // Listen to real-time updates from Firestore
   useEffect(() => {
     const roomsRef = collection(db, 'gameRooms');
-    // Temporarily load all rooms to debug
-    const q = query(roomsRef, orderBy('createdAt', 'desc'));
+    const q = query(roomsRef, where('status', '!=', 'finished'), orderBy('status'), orderBy('createdAt', 'desc'));
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const roomsData: GameRoom[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Filter out finished rooms in memory instead of query
-        if (data.status !== 'finished') {
-          roomsData.push({ id: doc.id, ...data } as GameRoom);
-        }
-      });
-      console.log('Loaded rooms:', roomsData);
+      const roomsData: GameRoom[] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GameRoom));
       setRooms(roomsData);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const handleCreateRoom = async () => {
+  const handleCreateGame = async () => {
     setLoading(true);
+    const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     try {
-      const roomCode = generateRoomCode();
       const roomData = {
         players: [username],
         spectators: [],
@@ -79,354 +62,222 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
         status: 'waiting' as const,
         createdAt: serverTimestamp(),
         createdBy: username,
-        roomCode
+        roomCode: newCode,
       };
-
       const docRef = await addDoc(collection(db, 'gameRooms'), roomData);
-      console.log('Room created with ID:', docRef.id);
-      
-      // Copy room code to clipboard
-      navigator.clipboard.writeText(roomCode);
-      setCopiedRoomCode(roomCode);
-      setTimeout(() => setCopiedRoomCode(null), 2000);
-      
-      // Join the multiplayer game instead of creating a single-player game
+      setShowCreateModal(false);
       onJoinGame(docRef.id, false);
     } catch (error) {
-      console.error('Error creating room:', error);
+      console.error("Error creating room:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleJoinAsPlayer = async (roomId: string) => {
-    try {
-      const roomRef = doc(db, 'gameRooms', roomId);
-      const room = rooms.find(r => r.id === roomId);
-      
-      if (room && room.players.length < 2 && !room.players.includes(username)) {
-        await updateDoc(roomRef, {
-          players: [...room.players, username]
+  const handleJoinByCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+    setLoading(true);
+    setJoinError('');
+
+    const roomsRef = collection(db, 'gameRooms');
+    const q = query(roomsRef, where('roomCode', '==', joinCode.trim().toUpperCase()));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      setJoinError('Room not found. Please check the code.');
+      setLoading(false);
+      return;
+    }
+
+    const roomDoc = querySnapshot.docs[0];
+    const room = { id: roomDoc.id, ...roomDoc.data() } as GameRoom;
+
+    if (room.players.includes(username)) {
+      onJoinGame(room.id, false);
+      return;
+    }
+
+    if (room.players.length < 2) {
+      await updateDoc(doc(db, 'gameRooms', room.id), {
+        players: [...room.players, username],
+        status: 'playing'
+      });
+      onJoinGame(room.id, false);
+    } else {
+      if (!room.spectators.includes(username)) {
+        await updateDoc(doc(db, 'gameRooms', room.id), {
+          spectators: [...room.spectators, username]
         });
-        onJoinGame(roomId, false);
       }
-    } catch (error) {
-      console.error('Error joining room:', error);
+      onJoinGame(room.id, true);
+    }
+    setLoading(false);
+  };
+  
+  const handleJoinAsPlayer = async (roomId: string) => {
+    const room = rooms.find(r => r.id === roomId);
+    if (room && room.players.length < 2 && !room.players.includes(username)) {
+      await updateDoc(doc(db, 'gameRooms', roomId), {
+        players: [...room.players, username],
+        status: 'playing',
+      });
+      onJoinGame(roomId, false);
     }
   };
 
   const handleJoinAsSpectator = async (roomId: string) => {
-    try {
-      const roomRef = doc(db, 'gameRooms', roomId);
-      const room = rooms.find(r => r.id === roomId);
-      
-      if (room && !room.spectators.includes(username)) {
-        await updateDoc(roomRef, {
-          spectators: [...room.spectators, username]
-        });
+    const room = rooms.find(r => r.id === roomId);
+    if (room) {
+        if (!room.spectators.includes(username)) {
+            await updateDoc(doc(db, 'gameRooms', roomId), {
+                spectators: [...room.spectators, username]
+            });
+        }
         onJoinGame(roomId, true);
-      }
-    } catch (error) {
-      console.error('Error joining as spectator:', error);
     }
   };
 
-  const handleJoinByRoomCode = async () => {
-    if (!roomCodeToJoin.trim()) {
-      setJoinError('Please enter a room code');
-      return;
-    }
-
-    setLoading(true);
-    setJoinError('');
-
-    try {
-      console.log('Available rooms:', rooms);
-      console.log('Looking for room code:', roomCodeToJoin.toUpperCase());
-      
-      // Find room by room code
-      const room = rooms.find(r => r.roomCode.toUpperCase() === roomCodeToJoin.toUpperCase());
-      
-      if (!room) {
-        setJoinError('Room not found. Please check the room code.');
-        return;
-      }
-
-      if (room.players.includes(username)) {
-        setJoinError('You are already in this room.');
-        return;
-      }
-
-      if (room.players.length >= 2 && !room.spectators.includes(username)) {
-        // Join as spectator if room is full
-        await handleJoinAsSpectator(room.id);
-      } else if (room.players.length < 2) {
-        // Join as player if there's space
-        await handleJoinAsPlayer(room.id);
-      } else {
-        setJoinError('Room is full.');
-        return;
-      }
-
-      setRoomCodeToJoin('');
-      setShowJoinByCode(false);
-    } catch (error) {
-      console.error('Error joining room:', error);
-      setJoinError('Failed to join room. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const copyRoomCode = (roomCode: string) => {
-    navigator.clipboard.writeText(roomCode);
-    setCopiedRoomCode(roomCode);
-    setTimeout(() => setCopiedRoomCode(null), 2000);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'waiting': return 'text-yellow-500';
-      case 'playing': return 'text-green-500';
-      case 'finished': return 'text-red-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'waiting': return 'Waiting for players';
-      case 'playing': return 'Game in progress';
-      case 'finished': return 'Game finished';
-      default: return 'Unknown';
-    }
-  };
-
-  const getTimeControlText = (timeControl: string) => {
-    switch (timeControl) {
-      case 'blitz': return 'Blitz (5 min)';
-      case 'rapid': return 'Rapid (10 min)';
-      case 'classical': return 'Classical (30 min)';
-      default: return timeControl;
-    }
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Multiplayer Lobby</h1>
-            <p className="text-gray-600 dark:text-white">Welcome, {username}!</p>
-          </div>
-          <div className="w-24"></div>
-        </div>
-
-        {/* Create Game Section */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <Play className="text-amber-600 dark:text-amber-400" size={24} />
-                <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">Create New Game</h2>
-              </div>
-              <button
-                onClick={() => setShowCreateGame(!showCreateGame)}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
-              >
-                {showCreateGame ? 'Cancel' : 'Create Game'}
+    <>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-slate-800 p-8 text-white">
+        <div className="w-full max-w-6xl">
+          {/* MODIFIED: This container now perfectly centers the title */}
+          <div className="relative flex items-center justify-center mb-12">
+              <button onClick={onBack} className="absolute left-0 flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                  <ArrowLeft size={20} />
+                  <span>Back</span>
               </button>
-            </div>
-
-            {showCreateGame && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Time Control
-                    </label>
-                    <select
-                      value={selectedTimeControl}
-                      onChange={(e) => setSelectedTimeControl(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="blitz">Blitz (5 min)</option>
-                      <option value="rapid">Rapid (10 min)</option>
-                      <option value="classical">Classical (30 min)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Board Theme
-                    </label>
-                    <select
-                      value={selectedBoardTheme}
-                      onChange={(e) => setSelectedBoardTheme(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="classic">Classic</option>
-                      <option value="blue">Blue</option>
-                      <option value="green">Green</option>
-                      <option value="purple">Purple</option>
-                      <option value="gray">Gray</option>
-                      <option value="brown">Brown</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCreateRoom}
-                  disabled={loading}
-                  className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
-                >
-                  {loading ? 'Creating...' : 'Create Game Room'}
-                </button>
-              </div>
-            )}
+              <h1 className="font-extrabold text-center bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-3xl lg:text-4xl">Play a Friend</h1>
+              <div className="absolute right-0 w-auto text-right text-gray-400">Welcome, {username}</div>
           </div>
-        </div>
 
-        {/* Join by Room Code */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <Users className="text-amber-600 dark:text-amber-400" size={24} />
-                <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">Join by Room Code</h2>
+          <div className="flex flex-col lg:flex-row gap-10 w-full max-w-4xl mx-auto mb-16">
+              <div className="flex-1 bg-slate-800/80 rounded-2xl shadow-2xl border border-slate-700 p-8 flex flex-col items-center justify-between transition-all duration-300 hover:border-blue-500 hover:shadow-[0_0_20px_0px_rgba(59,130,246,0.3)] min-h-[260px] hover:-translate-y-1">
+                  <div className="text-center">
+                      <h2 className="text-2xl font-bold mb-2">Create a Private Game</h2>
+                      <p className="text-gray-400">Start a new game and invite a friend.</p>
+                  </div>
+                  <button onClick={() => setShowCreateModal(true)} className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                      <Link className="h-5 w-5" /><span>Create Game</span>
+                  </button>
               </div>
-              <button
-                onClick={() => setShowJoinByCode(!showJoinByCode)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                {showJoinByCode ? 'Cancel' : 'Join by Code'}
-              </button>
-            </div>
 
-            {showJoinByCode && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Room Code
-                  </label>
-                  <input
-                    type="text"
-                    value={roomCodeToJoin}
-                    onChange={(e) => setRoomCodeToJoin(e.target.value.toUpperCase())}
-                    placeholder="Enter room code (e.g., XGS8AR)"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono"
-                    maxLength={6}
-                  />
-                </div>
-                {joinError && (
-                  <div className="text-red-500 text-sm">{joinError}</div>
+              <div className="flex-1 bg-slate-800/80 rounded-2xl shadow-2xl border border-slate-700 p-8 flex flex-col items-center justify-between transition-all duration-300 hover:border-amber-500 hover:shadow-[0_0_20px_0px_rgba(245,158,11,0.3)] min-h-[260px] hover:-translate-y-1">
+                {isJoining ? (
+                  <>
+                    <div className="text-center w-full">
+                        <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                        <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                    </div>
+                    <form onSubmit={handleJoinByCode} className="w-full flex flex-col gap-4 mt-6">
+                        <input autoFocus type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ENTER GAME CODE" className="w-full bg-gray-900 border-2 border-slate-600 rounded-lg text-center font-mono text-lg tracking-widest p-3 focus:border-amber-500 focus:ring-amber-500 focus:outline-none transition-colors" />
+                        {joinError && <p className="text-red-500 text-xs text-center">{joinError}</p>}
+                        <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200" disabled={!joinCode.trim() || loading}>
+                            {loading ? 'Joining...' : 'Confirm Join'}
+                        </button>
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                        <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                    </div>
+                    <button onClick={() => setIsJoining(true)} className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200">
+                        Join Game
+                    </button>
+                  </>
                 )}
-                <button
-                  onClick={handleJoinByRoomCode}
-                  disabled={loading}
-                  className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors"
-                >
-                  {loading ? 'Joining...' : 'Join Room'}
-                </button>
+              </div>
+          </div>
+
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-center text-slate-300 mb-6">Or Join an Available Game</h2>
+            {rooms.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800/50 rounded-lg">
+                <p className="text-gray-400 text-lg">No public games available right now.</p>
+                <p className="text-gray-500">Why not create one?</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {rooms.map((room) => (
+                  <div key={room.id} className="bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg p-5 border border-slate-700 flex flex-col hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 relative hover:-translate-y-1">
+                    <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex-grow">
+                            <div className="flex justify-between items-center mb-4">
+                                <p className="text-sm text-gray-300">
+                                    <span className="font-semibold">{room.createdBy}'s</span> Game
+                                </p>
+                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${room.status === 'waiting' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}>
+                                  {room.status}
+                                </span>
+                            </div>
+                            <h3 className="text-2xl font-mono font-bold text-amber-400 tracking-widest mb-4">{room.roomCode}</h3>
+                            <div className="text-sm text-gray-200 flex items-center justify-between border-t border-slate-700 pt-3">
+                                <span className="flex items-center gap-1.5"><Clock size={14} /> {room.timeControl}</span>
+                                <span className="flex items-center gap-1.5"><Users size={14} /> {room.players.length}/2</span>
+                                {room.spectators.length > 0 && <span className="flex items-center gap-1.5"><Eye size={14} /> {room.spectators.length}</span>}
+                            </div>
+                        </div>
+                        <div className="mt-5 flex items-center gap-2">
+                            {room.players.length < 2 && !room.players.includes(username) ? (
+                              <button onClick={() => handleJoinAsPlayer(room.id)} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-md transition-colors">Join Game</button>
+                            ) : (
+                              <button onClick={() => handleJoinAsSpectator(room.id)} className="w-full py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold rounded-md transition-colors">Watch</button>
+                            )}
+                            <button onClick={() => handleCopy(room.roomCode)} title="Copy Code" className="p-2 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors">
+                                {copiedCode === room.roomCode ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                            </button>
+                        </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </div>
-
-        {/* Available Games */}
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-3 mb-6">
-            <Users className="text-amber-600 dark:text-amber-400" size={24} />
-            <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">Available Games</h2>
-          </div>
-
-          {rooms.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-500 dark:text-gray-400 text-lg mb-4">No games available</div>
-              <p className="text-gray-400 dark:text-gray-500">Create a new game or wait for others to join</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border-2 border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400 transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                        Room {room.roomCode}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Created by {room.createdBy}
-                      </p>
-                    </div>
-                    <span className={`text-sm font-medium ${getStatusColor(room.status)}`}>
-                      {getStatusText(room.status)}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                      <Clock size={16} />
-                      <span>{getTimeControlText(room.timeControl)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                      <Users size={16} />
-                      <span>{room.players.length}/2 players</span>
-                    </div>
-                    {room.spectators.length > 0 && (
-                      <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-                        <Eye size={16} />
-                        <span>{room.spectators.length} spectators</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    {/* Debug info - remove this later */}
-                    <div className="text-xs text-gray-500">
-                      Debug: status={room.status}, players={room.players.length}/2, includes={room.players.includes(username)}
-                    </div>
-                    
-                    <div className="flex space-x-2">
-                      {room.players.length < 2 && !room.players.includes(username) && (
-                        <button
-                          onClick={() => handleJoinAsPlayer(room.id)}
-                          className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition-colors"
-                        >
-                          Join as Player
-                        </button>
-                      )}
-                      {!room.spectators.includes(username) && (
-                        <button
-                          onClick={() => handleJoinAsSpectator(room.id)}
-                          className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded transition-colors"
-                        >
-                          Watch Game
-                        </button>
-                      )}
-                      <button
-                        onClick={() => copyRoomCode(room.roomCode)}
-                        className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded transition-colors"
-                        title="Copy room code"
-                      >
-                        {copiedRoomCode === room.roomCode ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
-    </div>
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full flex flex-col border border-slate-700 relative">
+            <button onClick={() => setShowCreateModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-6 text-center text-white">Game Settings</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Time Control</label>
+                <select value={selectedTimeControl} onChange={(e) => setSelectedTimeControl(e.target.value)} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option>10 + 5</option>
+                  <option>5 + 3</option>
+                  <option>3 + 2</option>
+                  <option>1 + 1</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Board Theme</label>
+                <select value={selectedBoardTheme} onChange={(e) => setSelectedBoardTheme(e.target.value)} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                  <option value="classic">Classic</option>
+                  <option value="blue">Blue</option>
+                  <option value="green">Green</option>
+                  <option value="brown">Brown</option>
+                </select>
+              </div>
+            </div>
+            <button onClick={handleCreateGame} disabled={loading} className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200 disabled:opacity-50">
+              {loading ? 'Creating...' : 'Confirm and Create'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
-}; 
+};

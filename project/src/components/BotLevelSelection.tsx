@@ -1,35 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import { ChessPiece } from './ChessPiece';
 
 const BOT_LEVELS = [
   {
     label: 'Beginner',
-    difficulty: 4,
     bots: [
-      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/nL3bs9yB/tirthaaaa.jpg', locked: false, unlockCriteria: '', personality: 'Calm and Defensive', beaten: true },
-      { name: 'Kabir', rating: 800, img: 'https://i.postimg.cc/qBwDpYwW/kabir-photo.jpg', locked: false, unlockCriteria: '', personality: 'Likes quick trades', beaten: false },
-      { name: 'Madhur', rating: 1000, img: 'https://i.postimg.cc/mrhTgyNR/madhur.jpg', locked: false, unlockCriteria: '', personality: 'Aggressive Opener', beaten: false },
+      { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/nL3bs9yB/tirthaaaa.jpg', personality: 'Calm and Defensive' },
+      { name: 'Kabir', rating: 800, img: 'https://i.postimg.cc/qBwDpYwW/kabir-photo.jpg', personality: 'Likes quick trades' },
+      { name: 'Madhur', rating: 1000, img: 'https://i.postimg.cc/mrhTgyNR/madhur.jpg', personality: 'Aggressive Opener' },
     ],
   },
   {
     label: 'Intermediate',
-    difficulty: 8,
     bots: [
-      { name: 'Nishant', rating: 1200, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', locked: false, unlockCriteria: '', personality: 'Tactical and Sharp', beaten: false },
-      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/XqGj17hF/savii.jpg', locked: false, unlockCriteria: '', personality: 'University Champion', beaten: false },
-      { name: 'Adarsh', rating: 1600, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', locked: false, unlockCriteria: '', personality: 'Solid and Positional', beaten: false },
+      { name: 'Nishant', rating: 1200, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', personality: 'Tactical and Sharp' },
+      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/XqGj17hF/savii.jpg', personality: 'University Champion' },
+      { name: 'Adarsh', rating: 1600, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', personality: 'Solid and Positional' },
     ],
   },
   {
     label: 'Master',
-    difficulty: 15,
     bots: [
-      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Ls550QWw/sanchitk.jpg', locked: false, unlockCriteria: '', personality: 'Tricky Tactician', beaten: false },
-      { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', locked: false, unlockCriteria: '', personality: 'Endgame Expert', beaten: false },
-      { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', locked: false, unlockCriteria: '', personality: 'World Champion', beaten: false },
+      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Ls550QWw/sanchitk.jpg', personality: 'Tricky Tactician' },
+      { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', personality: 'Endgame Expert' },
+      { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', personality: 'World Champion' },
     ],
   },
 ];
+
+const LEVEL_THEMES = {
+  Beginner: {
+    glow: 'shadow-[0_0_30px_5px_rgba(202,138,4,0.4)]',
+    cardBorder: 'border-yellow-600/50',
+    avatarBorder: 'border-yellow-600',
+  },
+  Intermediate: {
+    glow: 'shadow-[0_0_30px_5px_rgba(156,163,175,0.4)]',
+    cardBorder: 'border-gray-400/50',
+    avatarBorder: 'border-gray-400',
+  },
+  Master: {
+    glow: 'shadow-[0_0_30px_5px_rgba(252,211,77,0.4)]',
+    cardBorder: 'border-amber-400/50',
+    avatarBorder: 'border-amber-400',
+  },
+};
 
 interface BotLevelSelectionProps {
   onSelect: (bot: any) => void;
@@ -39,59 +53,81 @@ const STORAGE_KEY = 'botAchievements';
 
 const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
-  const [achievements, setAchievements] = useState<{ unlocked: string[]; beaten: string[] }>({ unlocked: [], beaten: [] });
+  const [achievements, setAchievements] = useState<{ beaten: string[] }>({ beaten: [] });
 
   useEffect(() => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      setAchievements(JSON.parse(data));
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        const parsedData = JSON.parse(data);
+        setAchievements({ beaten: Array.isArray(parsedData.beaten) ? parsedData.beaten : [] });
+      }
+    } catch (error) {
+      console.error("Failed to parse bot achievements from localStorage", error);
+      setAchievements({ beaten: [] });
     }
   }, []);
-
-  const isUnlocked = (botName: string) => achievements.unlocked.includes(botName) || !BOT_LEVELS.flatMap(l => l.bots).find(b => b.name === botName)?.locked;
+  
   const isBeaten = (botName: string) => achievements.beaten.includes(botName);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-      <h1 className="font-extrabold mb-8 lg:mb-16 text-center bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-2xl lg:text-4xl">Choose Your Bot Opponent</h1>
-      <div className="flex flex-col lg:flex-row gap-2 lg:gap-4 w-full max-w-4xl mx-auto items-center justify-between">
-        {BOT_LEVELS.map(level => (
-          <div key={level.label} className="bg-slate-800/90 rounded-3xl shadow-2xl border-2 border-amber-300 p-4 w-full max-w-xs mx-auto lg:w-72 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-amber-400/30 hover:border-amber-300">
-            <h2 className="text-3xl font-extrabold mb-2 text-red-700 tracking-wide drop-shadow">{level.label}</h2>
-            <div className="mb-6 text-xl font-bold text-amber-100 uppercase tracking-wider drop-shadow-lg">{level.label === 'Beginner' ? 'Easy' : level.label === 'Intermediate' ? 'Medium' : 'Hard'}</div>
-            <div className="flex flex-row gap-2 lg:gap-4 mb-2 w-full items-center justify-center">
-              {level.bots.map((bot) => {
-                const unlocked = true;
-                const beaten = isBeaten(bot.name);
-                return (
-                  <button
-                    key={bot.name}
-                    className="flex flex-col items-center focus:outline-none group"
-                    onClick={() => onSelect({ ...bot, difficulty: level.difficulty, level: level.label })}
-                    onMouseEnter={e => setTooltip({ x: e.clientX, y: e.clientY, text: bot.personality })}
-                    onMouseLeave={() => setTooltip(null)}
-                    disabled={false}
-                  >
-                    <div className={`w-14 h-14 lg:w-16 lg:h-16 rounded-full border-4 flex items-center justify-center mb-2 transition-all duration-200 border-amber-400 shadow-lg`}>
-                      <img src={bot.img} alt={bot.name} className="w-10 h-10 lg:w-12 lg:h-12 rounded-full" />
-                    </div>
-                    <span
-                      className="font-extrabold text-base lg:text-lg mt-1"
-                      style={{ color: '#fbbf24', textShadow: '0 1px 4px rgba(0,0,0,0.25)' }}
-                    >
-                      {bot.name}
-                    </span>
-                    <span className="text-sm lg:text-base font-bold drop-shadow text-white">{bot.rating}</span>
-                  </button>
-                );
-              })}
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-8">
+      <h1 className="font-extrabold mb-12 text-center bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-4xl lg:text-5xl">Choose Your Opponent</h1>
+      <div className="flex flex-col lg:flex-row gap-12 w-full max-w-6xl mx-auto items-center justify-center">
+        {BOT_LEVELS.map(level => {
+          const theme = LEVEL_THEMES[level.label as keyof typeof LEVEL_THEMES];
+          return (
+            <div key={level.label} className={`relative transition-all duration-300 hover:scale-105 ${theme.glow} rounded-2xl`}>
+              <div
+                className={`group relative bg-slate-800/80 rounded-2xl shadow-2xl border p-6 w-full max-w-sm lg:w-80 flex flex-col items-center justify-start transition-all duration-300 overflow-hidden ${theme.cardBorder}`}
+              >
+                <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white/10 opacity-0 group-hover:opacity-100 group-hover:animate-[shimmer_2s_infinite]" />
+                
+                <h2 className={`text-3xl font-extrabold mb-8 tracking-wide drop-shadow-md bg-gradient-to-r bg-clip-text text-transparent 
+                  ${level.label === 'Beginner' ? 'from-yellow-600 via-amber-400 to-yellow-600' :
+                    level.label === 'Intermediate' ? 'from-gray-400 via-gray-200 to-gray-400' :
+                    'from-amber-400 via-yellow-300 to-amber-400'
+                  }`}
+                >
+                  {level.label}
+                </h2>
+                
+                <div className="flex flex-row gap-6 mb-2 w-full items-start justify-center">
+                  {level.bots.map((bot) => {
+                    const beaten = isBeaten(bot.name);
+                    return (
+                      <button
+                        key={bot.name}
+                        className="flex flex-col items-center focus:outline-none transition-transform duration-200 hover:scale-110"
+                        onClick={() => onSelect({ ...bot, difficulty: level.difficulty, level: level.label })}
+                        onMouseEnter={e => setTooltip({ x: e.clientX, y: e.clientY, text: `${bot.personality}${beaten ? ' (Beaten ✅)' : ''}` })}
+                        onMouseLeave={() => setTooltip(null)}
+                      >
+                        <div className={`relative w-20 h-20 rounded-full border-2 flex items-center justify-center mb-2 transition-all duration-200 shadow-lg ${theme.avatarBorder}`}>
+                          <img src={bot.img} alt={bot.name} className="w-full h-full p-1 rounded-full grayscale-0" />
+                          {beaten && (
+                             <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-slate-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                             </div>
+                          )}
+                        </div>
+                        <span className="font-bold text-lg mt-1 text-slate-100" >
+                          {bot.name}
+                        </span>
+                        <span className="text-base font-semibold drop-shadow text-white/70">{bot.rating}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
-      {/* Tooltip */}
       {tooltip && (
-        <div style={{ position: 'fixed', left: tooltip.x + 12, top: tooltip.y + 12, zIndex: 1000 }} className="bg-slate-900 text-white text-base rounded-xl px-5 py-3 shadow-2xl pointer-events-none font-semibold">
+        <div style={{ position: 'fixed', left: tooltip.x + 15, top: tooltip.y + 15, zIndex: 1000 }} className="bg-slate-900 text-white text-sm rounded-lg px-3 py-1 shadow-2xl pointer-events-none font-semibold border border-slate-700 animate-fade-in-fast">
           {tooltip.text}
         </div>
       )}
@@ -99,4 +135,4 @@ const BotLevelSelection: React.FC<BotLevelSelectionProps> = ({ onSelect }) => {
   );
 };
 
-export default BotLevelSelection; 
+export default BotLevelSelection;
