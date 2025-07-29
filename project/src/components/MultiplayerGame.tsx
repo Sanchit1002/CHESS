@@ -1,4 +1,3 @@
-// (same imports as before, unchanged)
 import React, { useState, useEffect, useMemo } from 'react';
 import { Chess } from 'chess.js';
 import {
@@ -42,8 +41,14 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     const newGame = new Chess(fen);
     const moves = roomData?.gameState?.moves || [];
     if (newGame.history().length === 0 && moves.length > 0) {
-      newGame.loadPgn(moves.join('\n'));
-    }
+  try {
+    newGame.loadPgn(moves.join('\n'));
+  } catch (e) {
+    console.error("Invalid PGN detected:", moves, e);
+    // Optionally reset game or notify user
+  }
+}
+
     return newGame;
   }, [roomData]);
 
@@ -156,6 +161,47 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     );
   }
 
+  const getGameOverMessage = () => {
+  if (roomData?.gameState?.result?.includes('Draw')) {
+    return {
+      msg: roomData.gameState.result || 'Draw!',
+      icon: <Handshake size={48} className="text-blue-400 mb-2" />,
+      color: 'text-blue-500',
+    };
+  }
+
+  if (roomData?.gameState?.result?.includes('resignation')) {
+    return {
+      msg: roomData.gameState.result || 'Player resigned.',
+      icon: <XCircle size={48} className="text-red-500 mb-2" />,
+      color: 'text-red-600',
+    };
+  }
+
+  if (game.isCheckmate()) {
+    const winner = game.turn() === 'w' ? 'Black' : 'White';
+    return {
+      msg: `${winner} wins by checkmate!`,
+      icon: <Trophy size={48} className="text-amber-400 mb-2" />,
+      color: 'text-amber-500',
+    };
+  }
+
+  if (game.isStalemate() || game.isDraw()) {
+    return {
+      msg: 'Draw!',
+      icon: <Handshake size={48} className="text-blue-400 mb-2" />,
+      color: 'text-blue-500',
+    };
+  }
+
+  return {
+    msg: 'Game Over',
+    icon: <Trophy size={48} className="text-amber-400 mb-2" />,
+    color: 'text-amber-500',
+  };
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 text-white p-4">
       <div className="max-w-screen-2xl mx-auto">
@@ -196,16 +242,22 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
             <div className="relative w-[90vw] max-w-[36rem] aspect-square">
               <ChessBoard chess={game} onMove={handleMove} isFlipped={playerColor === 'black'} />
-              {gameStatus === 'finished' && (
-                <div className="absolute inset-0 bg-black/70 rounded-lg flex flex-col justify-center items-center">
-                  <Trophy size={48} className="text-yellow-400 mb-4" />
-                  <h2 className="text-2xl font-bold">Game Over</h2>
-                  <p className="text-slate-300 my-2">{finalGameOverMessage}</p>
-                  <button onClick={onBack} className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold">
-                    Back to Lobby
-                  </button>
-                </div>
-              )}
+              {gameStatus === 'finished' && (() => {
+            const { msg, icon, color } = getGameOverMessage();
+            return (
+              <div className="absolute inset-0 bg-black/70 rounded-lg flex flex-col justify-center items-center">
+                {icon}
+                <h2 className={`text-2xl font-bold mb-2 ${color}`}>{msg}</h2>
+                <button
+                  onClick={onBack}
+                  className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold"
+                >
+                  Back to Lobby
+                </button>
+              </div>
+            );
+          })()}
+
             </div>
             <div className="text-gray-900 bg-slate-300 px-4 py-1 rounded-full font-bold">
               ♔ {whitePlayer || 'Waiting...'}
