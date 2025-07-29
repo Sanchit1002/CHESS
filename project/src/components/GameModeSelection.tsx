@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, Zap, Users, Play, ArrowLeft, Palette, UserCheck, BarChart3, Settings, Trophy } from 'lucide-react';
 import { CustomTimer } from './CustomTimer';
+import { SettingsModal } from './SettingsModal'; // Import the new modal
 
 interface GameModeSelectionProps {
   onStartGame: (timeControl: string | { minutes: number; seconds: number; increment: number; name: string }, boardTheme: string, color: 'white' | 'black' | 'random') => void;
@@ -10,7 +11,9 @@ interface GameModeSelectionProps {
   onAnalytics: () => void;
   onCompetitive: () => void;
   onTestData: () => void;
+  onSettings: () => void;
   username: string;
+  email: string; // Added email prop
 }
 
 const TIME_CONTROLS = [
@@ -95,12 +98,15 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
   onFriends, 
   onAnalytics, 
   onCompetitive, 
-  onTestData, 
-  username 
+  onTestData,
+  onSettings,
+  username,
+  email // Added email prop
 }) => {
   const [selectedMode, setSelectedMode] = useState<string>('');
   const [selectedBoardTheme, setSelectedBoardTheme] = useState<string | null>(null);
   const [showCustomTimer, setShowCustomTimer] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false); // State for the settings modal
   const [customTimeControl, setCustomTimeControl] = useState<{ minutes: number; seconds: number; increment: number; name: string } | null>(null);
   const [selectedColor, setSelectedColor] = useState<'white' | 'black' | 'random'>('white');
 
@@ -137,7 +143,7 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
         {/* Header */}
         <div className="text-center mb-8 pt-8">
           <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Choose Game Mode</h1>
-          <p className="text-amber-700 dark:text-white font-bold">Welcome back, {username}</p>
+          <p className="text-gray-600 dark:text-white font-bold">Welcome back, {username}</p>
         </div>
 
         {/* Game Mode Cards */}
@@ -284,10 +290,19 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
               <Trophy size={20} className="text-gray-600" />
               <span className="text-gray-700 dark:text-gray-200 font-medium">Competitive</span>
             </button>
+            
+            <button onClick={() => setShowSettingsModal(true)} className="flex items-center justify-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400">
+              <Settings size={20} className="text-gray-600" />
+              <span className="text-gray-700 dark:text-gray-200 font-medium">Settings</span>
+            </button>
+
+            {/* "Test Data" Button is now commented out */}
+            {/*
             <button onClick={onTestData} className="flex items-center justify-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-400">
               <Settings size={20} className="text-gray-600" />
               <span className="text-gray-700 dark:text-gray-200 font-medium">Test Data</span>
             </button>
+            */}
           </div>
         </div>
       </div>
@@ -297,6 +312,15 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
         <CustomTimer
           onSave={handleCustomTimerSave}
           onCancel={() => setShowCustomTimer(false)}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {showSettingsModal && (
+        <SettingsModal 
+          onClose={() => setShowSettingsModal(false)} 
+          username={username}
+          email={email}
         />
       )}
     </div>
