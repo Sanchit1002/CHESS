@@ -375,7 +375,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
     
     let evalColorClass = '';
     if (evaluation > 0.05) evalColorClass = 'text-amber-700';
-    else if (evaluation < -0.05) evalColorClass = 'text-slate-900 dark:text-amber-200';
+    else if (evaluation < -0.05) evalColorClass = 'text-white dark:text-amber-200';
     
     evalDisplayElement = <span className={evalColorClass}>{displayEval}</span>;
   } else {
@@ -410,8 +410,8 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
       {botAvatar && (
         <div className="flex flex-col items-center mb-4 pt-12">
           <img src={botAvatar} alt={botName} className="w-20 h-20 rounded-full border-4 border-amber-400 shadow-lg mb-2" />
-          <div className="text-lg font-bold text-slate-900 dark:text-amber-200">{botName} {botFlag && <span className="ml-1">{botFlag}</span>}</div>
-          {botRating && <div className="text-sm text-slate-500 dark:text-amber-100">Rating: {botRating}</div>}
+          <div className="text-lg font-bold text-white dark:text-amber-200">{botName} {botFlag && <span className="ml-1">{botFlag}</span>}</div>
+          {botRating && <div className="text-sm text-amber-200 dark:text-amber-100">Rating: {botRating}</div>}
         </div>
       )}
 
@@ -458,7 +458,7 @@ export const BotGame: React.FC<BotGameProps> = ({ boardTheme, color, onBack, dif
                 <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 dark:bg-slate-700 rounded-full peer dark:peer-focus:ring-amber-800 transition-all duration-200 peer-checked:bg-amber-500"></div>
                 <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-200 peer-checked:translate-x-5"></div>
               </label>
-              <span className="text-sm text-slate-700 dark:text-amber-200">(Best move for you)</span>
+              <span className="text-semibold text-slate-900 dark:text-amber-200">(Best move for you)</span>
             </div>
           </div>
           <div className="flex flex-col items-center mt-8">

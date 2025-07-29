@@ -1,6 +1,10 @@
+// (same imports as before, unchanged)
 import React, { useState, useEffect, useMemo } from 'react';
 import { Chess } from 'chess.js';
-import { doc, onSnapshot, updateDoc, collection, addDoc, serverTimestamp, query, orderBy, arrayUnion } from 'firebase/firestore';
+import {
+  doc, onSnapshot, updateDoc, collection, addDoc,
+  serverTimestamp, query, orderBy, arrayUnion
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import { ChessBoard } from './ChessBoard';
 import { GameStatus } from './GameStatus';
@@ -155,6 +159,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 text-white p-4">
       <div className="max-w-screen-2xl mx-auto">
+        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <button onClick={onBack} className="text-gray-300 hover:text-white flex gap-2">
             <ArrowLeft size={20} /> Lobby
@@ -162,7 +167,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           <div className="text-center">
             <h1 className="text-xl font-bold text-amber-400">Room: {roomData.roomCode}</h1>
             {isSpectator && (
-              <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
+              <p className="text-l text-blue-400 flex items-center justify-center gap-2">
                 <Eye size={14} /> Spectating
               </p>
             )}
@@ -175,22 +180,20 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
           </div>
         </div>
 
+        {/* Layout: Sidebars + Board */}
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-start">
-          {/* Game Info */}
-          <div className="w-full max-w-xs flex flex-col gap-4">
-            <div className="bg-gray-800 rounded-xl p-4 shadow">
-              <GameStatus chess={game} />
-            </div>
-            <div className="bg-gray-800 rounded-xl p-4 shadow h-full overflow-auto flex-1">
-              <MoveHistory chess={game} />
-            </div>
+          {/* Left: Game Info + Move History */}
+          <div className="w-full max-w-xs flex flex-col gap-4 mt-[2.4rem]">
+            <GameStatus chess={game} />
+            <MoveHistory chess={game} />
           </div>
 
-          {/* Chess Board */}
+          {/* Center: Board */}
           <div className="flex flex-col items-center gap-2">
-            <div className="text-white bg-slate-700 px-4 py-1 rounded-full font-bold">
-              ♟️ {blackPlayer || 'Waiting...'}
+            <div className="text-gray-900 bg-slate-300 px-4 py-1 rounded-full font-bold">
+              ♔ {blackPlayer || 'Waiting...'}
             </div>
+
             <div className="relative w-[90vw] max-w-[36rem] aspect-square">
               <ChessBoard chess={game} onMove={handleMove} isFlipped={playerColor === 'black'} />
               {gameStatus === 'finished' && (
@@ -209,17 +212,19 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
           </div>
 
-          {/* Chat Box */}
-          <div className="w-full max-w-xs flex flex-col gap-4">
-            <div className="bg-gray-800 rounded-xl p-4 shadow h-full overflow-auto flex-1">
-              <Chat
-                messages={messages}
-                newMessage={newMessage}
-                onMessageChange={setNewMessage}
-                onSendMessage={sendMessage}
-                disabled={isSpectator}
-              />
-            </div>
+          {/* Right: Chat + Controls */}
+          <div className="w-full max-w-xs flex flex-col gap-4 mt-[2.4rem]">
+  <div>
+    {/* Removed duplicate heading and injected bold label inside the Chat box */}
+    <Chat
+      messages={messages}
+      newMessage={newMessage}
+      onMessageChange={setNewMessage}
+      onSendMessage={sendMessage}
+      disabled={isSpectator}
+      tabLabelClassName="font-bold" // You will need to support this in the Chat component
+    />
+  </div>
             {!isSpectator && gameStatus === 'playing' && (
               <div className="flex gap-3">
                 <button
@@ -241,7 +246,7 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         </div>
       </div>
 
-      {/* Draw Modal */}
+      {/* Draw Offer Modal */}
       {showDrawModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full border border-blue-500 shadow-lg">

@@ -14,6 +14,7 @@ interface ChatProps {
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
   disabled?: boolean;
+  tabLabelClassName?: string; // ✅ added prop
 }
 
 export const Chat: React.FC<ChatProps> = ({
@@ -21,7 +22,8 @@ export const Chat: React.FC<ChatProps> = ({
   newMessage,
   onMessageChange,
   onSendMessage,
-  disabled = false
+  disabled = false,
+  tabLabelClassName = '', // ✅ default fallback
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,7 @@ export const Chat: React.FC<ChatProps> = ({
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-700">
         <MessageCircle size={20} className="text-amber-400" />
-        <h3 className="text-sm font-semibold text-white">Game Chat</h3>
+        <h3 className={`text-lg text-white ${tabLabelClassName}`}>Game Chat</h3>
       </div>
 
       {/* Messages */}
@@ -76,7 +78,7 @@ export const Chat: React.FC<ChatProps> = ({
           type="text"
           value={newMessage}
           onChange={(e) => onMessageChange(e.target.value)}
-          placeholder={disabled ? "Spectators cannot chat" : "Type a message..."}
+          placeholder={disabled ? 'Spectators cannot chat' : 'Type a message...'}
           disabled={disabled}
           className="flex-1 px-3 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50"
         />
