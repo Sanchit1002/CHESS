@@ -13,7 +13,7 @@ const BOT_LEVELS = [
     label: 'Intermediate',
     bots: [
       { name: 'Nishant', rating: 1200, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', personality: 'Tactical and Sharp' },
-      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/XqGj17hF/savii.jpg', personality: 'University Champion' },
+      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/524r4GjP/Whats-App-Image-2025-07-31-at-03-07-36-45fb4ae3.jpg', personality: 'University Champion' },
       { name: 'Adarsh', rating: 1600, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', personality: 'Solid and Positional' },
     ],
   },

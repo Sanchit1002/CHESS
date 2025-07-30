@@ -142,9 +142,13 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8 pt-8">
-          
-          <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Choose Game Mode</h1>
-          
+            <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">Choose Game Mode</h1>
+            
+            {/* Added Welcome Message */}
+            <p className="animate-fade-in-up mt-2 text-xl text-gray-900 font-bold dark:text-white dark:text-shadow-[0_0_8px_currentColor]">
+             Welcome back 👋🏻 {username}
+            </p>
+            
         </div>
 
         {/* Game Mode Cards */}
@@ -235,39 +239,39 @@ export const GameModeSelection: React.FC<GameModeSelectionProps> = ({
 
           {/* Color Selection */}
           <div className="flex items-center justify-center space-x-6 mb-8">
-  <button
-    className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
-      selectedColor === 'white'
-        ? 'bg-amber-400 text-white border-amber-600' // Selected: White text on yellow
-        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700' // Unselected: Readable text
-    }`}
-    onClick={() => setSelectedColor('white')}
-  >
-    Play as White
-  </button>
-  
-  <button
-    className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
-      selectedColor === 'random'
-        ? 'bg-amber-400 text-white border-amber-600'
-        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-    }`}
-    onClick={() => setSelectedColor('random')}
-  >
-    Random
-  </button>
+            <button
+              className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
+                selectedColor === 'white'
+                  ? 'bg-amber-400 text-white border-amber-600' // Selected: White text on yellow
+                  : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700' // Unselected: Readable text
+              }`}
+              onClick={() => setSelectedColor('white')}
+            >
+              Play as White
+            </button>
+            
+            <button
+              className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
+                selectedColor === 'random'
+                  ? 'bg-amber-400 text-white border-amber-600'
+                  : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              onClick={() => setSelectedColor('random')}
+            >
+              Random
+            </button>
 
-  <button
-    className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
-      selectedColor === 'black'
-        ? 'bg-amber-400 text-white border-amber-600'
-        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
-    }`}
-    onClick={() => setSelectedColor('black')}
-  >
-    Play as Black
-  </button>
-</div>
+            <button
+              className={`px-6 py-3 rounded-lg font-bold text-lg transition-colors duration-200 border-2 focus:outline-none ${
+                selectedColor === 'black'
+                  ? 'bg-amber-400 text-white border-amber-600'
+                  : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              onClick={() => setSelectedColor('black')}
+            >
+              Play as Black
+            </button>
+          </div>
 
           {/* Start Game Button */}
           <div className="text-center">

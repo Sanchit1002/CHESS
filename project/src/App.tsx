@@ -256,9 +256,6 @@ function App() {
                   No, I know chess
                 </button>
               </div>
-              <p className="text-sm text-gray-500 mt-4">
-                You can change this later in settings
-              </p>
             </div>
           </div>
         </div>

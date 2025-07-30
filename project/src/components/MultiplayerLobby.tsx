@@ -290,19 +290,14 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Time Control</label>
                 <select value={selectedTimeControl} onChange={(e) => setSelectedTimeControl(e.target.value)} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                  <option>10 + 5</option>
-                  <option>5 + 3</option>
-                  <option>3 + 2</option>
-                  <option>1 + 1</option>
+                  <option>Unlimited Time</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Board Theme</label>
                 <select value={selectedBoardTheme} onChange={(e) => setSelectedBoardTheme(e.target.value)} className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                   <option value="classic">Classic</option>
-                  <option value="blue">Blue</option>
-                  <option value="green">Green</option>
-                  <option value="brown">Brown</option>
+                  
                 </select>
               </div>
             </div>
