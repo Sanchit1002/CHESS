@@ -13,6 +13,7 @@ import { TestData } from './components/TestData';
 import { Moon, Sun } from 'lucide-react';
 import { BotGame } from './components/BotGame';
 import BotLevelSelection from './components/BotLevelSelection';
+import { db, auth } from './firebase';
 
 type AppState = 'signin' | 'signup' | 'gameMode' | 'multiplayer' | 'multiplayerGame' | 'friends' | 'game' | 'analytics' | 'competitive' | 'testData' | 'leaderboard' | 'testEnv' | 'botGame' | 'botLevelSelection';
 

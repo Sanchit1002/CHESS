@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { History, Download } from 'lucide-react';
 
@@ -8,7 +8,8 @@ interface MoveHistoryProps {
 
 export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
   const history = chess.history();
-  
+  const movesEndRef = useRef<null | HTMLDivElement>(null);
+
   const groupedMoves = [];
   for (let i = 0; i < history.length; i += 2) {
     groupedMoves.push({
@@ -17,6 +18,12 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
       black: history[i + 1]
     });
   }
+
+  // This effect will automatically scroll to the latest move
+  useEffect(() => {
+    movesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [groupedMoves]);
+
 
   const exportPGN = () => {
     const pgn = chess.pgn();
@@ -32,10 +39,12 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-6 max-w-md transition-all duration-300 hover:scale-105 hover:bg-white/15">
-      <div className="flex items-center justify-between mb-6">
+    // <<< UPDATED: Changed padding from p-6 to p-4 for a more compact look >>>
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-4 max-w-md transition-all duration-300 hover:scale-105 hover:bg-white/15 flex flex-col">
+      {/* <<< UPDATED: Reduced margin-bottom from mb-4 to mb-2 >>> */}
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <History className="text-amber-400 animate-pulse" size={24} />
+          <History className="text-amber-400" size={24} />
           <h3 className="text-lg font-bold text-white">Move History</h3>
         </div>
         {history.length > 0 && (
@@ -50,7 +59,8 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
         )}
       </div>
       
-      <div className="overflow-visible">
+      {/* <<< UPDATED: Shortened max-height from max-h-96 to max-h-80 >>> */}
+      <div className="overflow-y-auto max-h-80 pr-2 -mr-2">
         {groupedMoves.length === 0 ? (
           <div className="text-center text-white/60 text-sm py-6 bg-white/5 rounded-lg">
             No moves yet
@@ -70,6 +80,8 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
                 </span>
               </div>
             ))}
+            {/* This empty div is a target for the auto-scroll */}
+            <div ref={movesEndRef} />
           </div>
         )}
       </div>

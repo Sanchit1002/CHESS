@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Eye, Clock, ArrowLeft, Copy, Check, Link, X } from 'lucide-react';
-import { collection, addDoc, onSnapshot, doc, updateDoc, query, where, getDocs, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, doc, updateDoc, query, where, getDocs, serverTimestamp, orderBy, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase';
 
+// Interface with correct player fields
 interface GameRoom {
   id: string;
   players: string[];
+  whitePlayer: string | null;
+  blackPlayer: string | null;
   spectators: string[];
   gameState: any;
   timeControl: string;
@@ -55,8 +58,14 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
     try {
       const roomData = {
         players: [username],
+        whitePlayer: username,
+        blackPlayer: null,
         spectators: [],
-        gameState: null,
+        gameState: {
+            fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+            moves: [],
+            lastMove: null,
+        },
         timeControl: selectedTimeControl,
         boardTheme: selectedBoardTheme,
         status: 'waiting' as const,
@@ -64,6 +73,8 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
         createdBy: username,
         roomCode: newCode,
       };
+      console.log("--- Creating Game ---");
+      console.log("Payload being sent:", roomData);
       const docRef = await addDoc(collection(db, 'gameRooms'), roomData);
       setShowCreateModal(false);
       onJoinGame(docRef.id, false);
@@ -99,15 +110,21 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
     }
 
     if (room.players.length < 2) {
-      await updateDoc(doc(db, 'gameRooms', room.id), {
-        players: [...room.players, username],
+      const updatePayload = {
+        players: arrayUnion(username),
+        blackPlayer: username,
         status: 'playing'
-      });
+      };
+      // <<< DEEPER DEBUGGING LOG >>>
+      console.log("--- Joining by Code ---");
+      console.log(`Attempting to update doc ${room.id} with payload:`, updatePayload);
+      await updateDoc(doc(db, 'gameRooms', room.id), updatePayload);
+      console.log("Update successful!");
       onJoinGame(room.id, false);
     } else {
       if (!room.spectators.includes(username)) {
         await updateDoc(doc(db, 'gameRooms', room.id), {
-          spectators: [...room.spectators, username]
+          spectators: arrayUnion(username)
         });
       }
       onJoinGame(room.id, true);
@@ -118,10 +135,16 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   const handleJoinAsPlayer = async (roomId: string) => {
     const room = rooms.find(r => r.id === roomId);
     if (room && room.players.length < 2 && !room.players.includes(username)) {
-      await updateDoc(doc(db, 'gameRooms', roomId), {
-        players: [...room.players, username],
+      const updatePayload = {
+        players: arrayUnion(username),
+        blackPlayer: username,
         status: 'playing',
-      });
+      };
+      // <<< DEEPER DEBUGGING LOG >>>
+      console.log("--- Joining as Player ---");
+      console.log(`Attempting to update doc ${roomId} with payload:`, updatePayload);
+      await updateDoc(doc(db, 'gameRooms', roomId), updatePayload);
+      console.log("Update successful!");
       onJoinGame(roomId, false);
     }
   };
@@ -131,7 +154,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
     if (room) {
         if (!room.spectators.includes(username)) {
             await updateDoc(doc(db, 'gameRooms', roomId), {
-                spectators: [...room.spectators, username]
+                spectators: arrayUnion(username)
             });
         }
         onJoinGame(roomId, true);
@@ -139,9 +162,19 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
   };
 
   const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedCode(code);
-    setTimeout(() => setCopiedCode(null), 2000);
+    const textArea = document.createElement("textarea");
+    textArea.value = code;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+    document.body.removeChild(textArea);
   };
 
   return (
@@ -156,7 +189,6 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
         <div className="w-full max-w-6xl">
           <div className="text-center mb-12">
             <h1 className="font-extrabold bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 bg-clip-text text-transparent drop-shadow-lg text-3xl lg:text-4xl">Play a Friend</h1>
-            {/* MODIFIED: Added font-bold class */}
             <p className="text-gray-400 mt-2 font-bold">Welcome, {username}</p>
           </div>
 
@@ -173,29 +205,29 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({
 
               <div className="flex-1 bg-slate-800/80 rounded-2xl shadow-2xl border border-slate-700 p-8 flex flex-col items-center justify-between transition-all duration-300 hover:border-amber-500 hover:shadow-[0_0_20px_0px_rgba(245,158,11,0.3)] min-h-[260px] hover:-translate-y-1">
                   {isJoining ? (
-                    <>
-                      <div className="text-center w-full">
-                          <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
-                          <p className="text-gray-400">Enter a code to join a friend's game.</p>
-                      </div>
-                      <form onSubmit={handleJoinByCode} className="w-full flex flex-col gap-4 mt-6">
-                          <input autoFocus type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ENTER GAME CODE" className="w-full bg-gray-900 border-2 border-slate-600 rounded-lg text-center font-mono text-lg tracking-widest p-3 focus:border-amber-500 focus:ring-amber-500 focus:outline-none transition-colors" />
-                          {joinError && <p className="text-red-500 text-xs text-center">{joinError}</p>}
-                          <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200" disabled={!joinCode.trim() || loading}>
-                              {loading ? 'Joining...' : 'Confirm Join'}
-                          </button>
-                      </form>
-                    </>
+                      <>
+                          <div className="text-center w-full">
+                              <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                              <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                          </div>
+                          <form onSubmit={handleJoinByCode} className="w-full flex flex-col gap-4 mt-6">
+                              <input autoFocus type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="ENTER GAME CODE" className="w-full bg-gray-900 border-2 border-slate-600 rounded-lg text-center font-mono text-lg tracking-widest p-3 focus:border-amber-500 focus:ring-amber-500 focus:outline-none transition-colors" />
+                              {joinError && <p className="text-red-500 text-xs text-center">{joinError}</p>}
+                              <button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200" disabled={!joinCode.trim() || loading}>
+                                  {loading ? 'Joining...' : 'Confirm Join'}
+                              </button>
+                          </form>
+                      </>
                   ) : (
-                    <>
-                      <div className="text-center">
-                          <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
-                          <p className="text-gray-400">Enter a code to join a friend's game.</p>
-                      </div>
-                      <button onClick={() => setIsJoining(true)} className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200">
-                          Join Game
-                      </button>
-                    </>
+                      <>
+                          <div className="text-center">
+                              <h2 className="text-2xl font-bold mb-2">Join with a Code</h2>
+                              <p className="text-gray-400">Enter a code to join a friend's game.</p>
+                          </div>
+                          <button onClick={() => setIsJoining(true)} className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-200">
+                              Join Game
+                          </button>
+                      </>
                   )}
               </div>
           </div>

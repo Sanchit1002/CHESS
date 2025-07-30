@@ -9,7 +9,7 @@ import { ChessBoard } from './ChessBoard';
 import { GameStatus } from './GameStatus';
 import { MoveHistory } from './MoveHistory';
 import { Chat } from './Chat';
-import { ArrowLeft, Users, Trophy, Eye, Handshake, Flag } from 'lucide-react';
+import { ArrowLeft, Users, Trophy, Eye, Handshake, Flag, XCircle } from 'lucide-react';
 
 interface MultiplayerGameProps {
   roomId: string;
@@ -41,23 +41,23 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     const newGame = new Chess(fen);
     const moves = roomData?.gameState?.moves || [];
     if (newGame.history().length === 0 && moves.length > 0) {
-  try {
-    newGame.loadPgn(moves.join('\n'));
-  } catch (e) {
-    console.error("Invalid PGN detected:", moves, e);
-    // Optionally reset game or notify user
-  }
-}
-
+      try {
+        newGame.loadPgn(moves.join('\n'));
+      } catch (e) {
+        console.error("Invalid PGN detected:", moves, e);
+      }
+    }
     return newGame;
   }, [roomData]);
 
   const gameStatus = roomData?.status || 'loading';
 
   const playerColor = useMemo(() => {
-    if (!roomData?.players || !username) return null;
-    return roomData.players[0] === username ? 'white' : 'black';
-  }, [roomData?.players, username]);
+    if (!roomData || !username) return null;
+    if (roomData.whitePlayer === username) return 'white';
+    if (roomData.blackPlayer === username) return 'black';
+    return null;
+  }, [roomData]);
 
   const isMyTurn = useMemo(() => {
     if (isSpectator || !playerColor) return false;
@@ -67,18 +67,26 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   const drawOffer = roomData?.gameState?.drawOffer;
   const showDrawModal = drawOffer?.to === username && drawOffer?.status === 'pending';
 
-  const whitePlayer = roomData?.players?.[0];
-  const blackPlayer = roomData?.players?.[1];
+  // <<< UPDATED: Replaced useMemo with simple constants for robust re-rendering >>>
+  const whitePlayer = roomData?.whitePlayer;
+  const blackPlayer = roomData?.blackPlayer;
 
   useEffect(() => {
+    if (!roomId) {
+        setLoading(false);
+        return;
+    }
     const unsub = onSnapshot(doc(db, 'gameRooms', roomId), (docSnap) => {
-      if (docSnap.exists()) setRoomData(docSnap.data());
+      if (docSnap.exists()) {
+        setRoomData(docSnap.data());
+      }
       setLoading(false);
     });
     return () => unsub();
   }, [roomId]);
 
   useEffect(() => {
+    if (!roomId) return;
     const q = query(collection(db, 'gameRooms', roomId, 'messages'), orderBy('timestamp'));
     const unsub = onSnapshot(q, (snap) => {
       setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage)));
@@ -102,7 +110,9 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
   const offerDraw = async () => {
     if (isSpectator || game.isGameOver()) return;
-    const opponent = roomData.players.find((p: string) => p !== username);
+    const opponent = playerColor === 'white' ? blackPlayer : whitePlayer;
+    if (!opponent) return;
+
     await updateDoc(doc(db, 'gameRooms', roomId), {
       'gameState.drawOffer': {
         from: username,
@@ -114,7 +124,9 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
 
   const resignGame = async () => {
     if (isSpectator || game.isGameOver()) return;
-    const winner = roomData.players.find((p: string) => p !== username);
+    const winner = playerColor === 'white' ? blackPlayer : whitePlayer;
+    if (!winner) return;
+    
     await updateDoc(doc(db, 'gameRooms', roomId), {
       'status': 'finished',
       'gameState.result': `${winner} wins by resignation`,
@@ -132,26 +144,58 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
   };
 
   const handleDrawResponse = async (accepted: boolean) => {
-    const opponent = roomData.players.find((p: string) => p !== username);
+    const opponent = playerColor === 'white' ? blackPlayer : whitePlayer;
+    if (!opponent) return;
+
     await updateDoc(doc(db, 'gameRooms', roomId), {
       'gameState.drawOffer': accepted
         ? { from: opponent, to: username, status: 'accepted' }
         : null,
       'status': accepted ? 'finished' : roomData.status,
-      'gameState.result': accepted ? 'Draw by agreement' : null,
+      'gameState.result': accepted ? 'Draw by agreement' : roomData.gameState?.result || null,
     });
   };
 
-  const finalGameOverMessage = useMemo(() => {
-    if (gameStatus !== 'finished') return null;
-    if (roomData.gameState?.result) return roomData.gameState.result;
-    if (game.isCheckmate()) return `${game.turn() === 'w' ? 'Black' : 'White'} wins by checkmate!`;
-    if (game.isStalemate()) return 'Draw by stalemate';
-    if (game.isThreefoldRepetition()) return 'Draw by threefold repetition';
-    if (game.isInsufficientMaterial()) return 'Draw by insufficient material';
-    if (game.isDraw()) return 'The game is a draw';
-    return 'Game Over';
-  }, [gameStatus, game, roomData?.gameState?.result]);
+  const getGameOverMessage = () => {
+    if (roomData?.gameState?.result?.includes('Draw')) {
+      return {
+        msg: roomData.gameState.result || 'Draw!',
+        icon: <Handshake size={48} className="text-blue-400 mb-2" />,
+        color: 'text-blue-500',
+      };
+    }
+
+    if (roomData?.gameState?.result?.includes('resignation')) {
+      return {
+        msg: roomData.gameState.result || 'Player resigned.',
+        icon: <XCircle size={48} className="text-red-500 mb-2" />,
+        color: 'text-red-600',
+      };
+    }
+
+    if (game.isCheckmate()) {
+      const winnerName = game.turn() === 'w' ? blackPlayer : whitePlayer;
+      return {
+        msg: `${winnerName} wins by checkmate!`,
+        icon: <Trophy size={48} className="text-amber-400 mb-2" />,
+        color: 'text-amber-500',
+      };
+    }
+
+    if (game.isStalemate() || game.isDraw()) {
+      return {
+        msg: 'Draw!',
+        icon: <Handshake size={48} className="text-blue-400 mb-2" />,
+        color: 'text-blue-500',
+      };
+    }
+
+    return {
+      msg: 'Game Over',
+      icon: <Trophy size={48} className="text-amber-400 mb-2" />,
+      color: 'text-amber-500',
+    };
+  };
 
   if (loading) {
     return (
@@ -161,57 +205,15 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
     );
   }
 
-  const getGameOverMessage = () => {
-  if (roomData?.gameState?.result?.includes('Draw')) {
-    return {
-      msg: roomData.gameState.result || 'Draw!',
-      icon: <Handshake size={48} className="text-blue-400 mb-2" />,
-      color: 'text-blue-500',
-    };
-  }
-
-  if (roomData?.gameState?.result?.includes('resignation')) {
-    return {
-      msg: roomData.gameState.result || 'Player resigned.',
-      icon: <XCircle size={48} className="text-red-500 mb-2" />,
-      color: 'text-red-600',
-    };
-  }
-
-  if (game.isCheckmate()) {
-    const winner = game.turn() === 'w' ? 'Black' : 'White';
-    return {
-      msg: `${winner} wins by checkmate!`,
-      icon: <Trophy size={48} className="text-amber-400 mb-2" />,
-      color: 'text-amber-500',
-    };
-  }
-
-  if (game.isStalemate() || game.isDraw()) {
-    return {
-      msg: 'Draw!',
-      icon: <Handshake size={48} className="text-blue-400 mb-2" />,
-      color: 'text-blue-500',
-    };
-  }
-
-  return {
-    msg: 'Game Over',
-    icon: <Trophy size={48} className="text-amber-400 mb-2" />,
-    color: 'text-amber-500',
-  };
-};
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-slate-800 text-white p-4">
       <div className="max-w-screen-2xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <button onClick={onBack} className="text-gray-300 hover:text-white flex gap-2">
             <ArrowLeft size={20} /> Lobby
           </button>
           <div className="text-center">
-            <h1 className="text-xl font-bold text-amber-400">Room: {roomData.roomCode}</h1>
+            <h1 className="text-xl font-bold text-amber-400">Room: {roomData?.roomCode || '...'}</h1>
             {isSpectator && (
               <p className="text-l text-blue-400 flex items-center justify-center gap-2">
                 <Eye size={14} /> Spectating
@@ -219,22 +221,19 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             )}
           </div>
           <div className="flex gap-4 text-sm text-gray-400">
-            <span className="flex items-center gap-1"><Users size={16} /> {roomData?.players?.length}/2</span>
+            <span className="flex items-center gap-1"><Users size={16} /> {roomData?.players?.length || 0}/2</span>
             {roomData?.spectators?.length > 0 && (
               <span className="flex items-center gap-1"><Eye size={16} /> {roomData.spectators.length}</span>
             )}
           </div>
         </div>
 
-        {/* Layout: Sidebars + Board */}
         <div className="flex flex-col lg:flex-row gap-6 justify-center items-start">
-          {/* Left: Game Info + Move History */}
           <div className="w-full max-w-xs flex flex-col gap-4 mt-[2.4rem]">
             <GameStatus chess={game} />
             <MoveHistory chess={game} />
           </div>
 
-          {/* Center: Board */}
           <div className="flex flex-col items-center gap-2">
             <div className="text-gray-900 bg-slate-300 px-4 py-1 rounded-full font-bold">
               ♔ {blackPlayer || 'Waiting...'}
@@ -243,20 +242,20 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             <div className="relative w-[90vw] max-w-[36rem] aspect-square">
               <ChessBoard chess={game} onMove={handleMove} isFlipped={playerColor === 'black'} />
               {gameStatus === 'finished' && (() => {
-            const { msg, icon, color } = getGameOverMessage();
-            return (
-              <div className="absolute inset-0 bg-black/70 rounded-lg flex flex-col justify-center items-center">
-                {icon}
-                <h2 className={`text-2xl font-bold mb-2 ${color}`}>{msg}</h2>
-                <button
-                  onClick={onBack}
-                  className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold"
-                >
-                  Back to Lobby
-                </button>
-              </div>
-            );
-          })()}
+                const { msg, icon, color } = getGameOverMessage();
+                return (
+                  <div className="absolute inset-0 bg-black/70 rounded-lg flex flex-col justify-center items-center">
+                    {icon}
+                    <h2 className={`text-2xl font-bold mb-2 ${color}`}>{msg}</h2>
+                    <button
+                      onClick={onBack}
+                      className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 rounded-lg font-semibold"
+                    >
+                      Back to Lobby
+                    </button>
+                  </div>
+                );
+              })()}
 
             </div>
             <div className="text-gray-900 bg-slate-300 px-4 py-1 rounded-full font-bold">
@@ -264,19 +263,16 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
             </div>
           </div>
 
-          {/* Right: Chat + Controls */}
           <div className="w-full max-w-xs flex flex-col gap-4 mt-[2.4rem]">
-  <div>
-    {/* Removed duplicate heading and injected bold label inside the Chat box */}
-    <Chat
-      messages={messages}
-      newMessage={newMessage}
-      onMessageChange={setNewMessage}
-      onSendMessage={sendMessage}
-      disabled={isSpectator}
-      tabLabelClassName="font-bold" // You will need to support this in the Chat component
-    />
-  </div>
+            <div>
+              <Chat
+                messages={messages}
+                newMessage={newMessage}
+                onMessageChange={setNewMessage}
+                onSendMessage={sendMessage}
+                disabled={isSpectator}
+              />
+            </div>
             {!isSpectator && gameStatus === 'playing' && (
               <div className="flex gap-3">
                 <button
@@ -298,7 +294,6 @@ export const MultiplayerGame: React.FC<MultiplayerGameProps> = ({
         </div>
       </div>
 
-      {/* Draw Offer Modal */}
       {showDrawModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full border border-blue-500 shadow-lg">
