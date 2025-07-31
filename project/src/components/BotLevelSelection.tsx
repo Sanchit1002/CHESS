@@ -5,7 +5,7 @@ const BOT_LEVELS = [
     label: 'Beginner',
     bots: [
       { name: 'Tirtha', rating: 600, img: 'https://i.postimg.cc/nL3bs9yB/tirthaaaa.jpg', personality: 'Calm and Defensive' },
-      { name: 'Kabir', rating: 800, img: 'https://i.postimg.cc/qBwDpYwW/kabir-photo.jpg', personality: 'Likes quick trades' },
+      { name: 'Kabir', rating: 800, img: 'https://i.postimg.cc/qBwDpYwW/kabir-photo.jpg', personality: 'Focused Player' },
       { name: 'Madhur', rating: 1000, img: 'https://i.postimg.cc/mrhTgyNR/madhur.jpg', personality: 'Aggressive Opener' },
     ],
   },
