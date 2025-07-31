@@ -20,7 +20,7 @@ const BOT_LEVELS = [
   {
     label: 'Master',
     bots: [
-      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Y0y5N0JJ/sanchit.pngnp', personality: 'Tricky Tactician' },
+      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/qvY8frT4/Whats-App-Image-2025-08-01-at-01-20-53-407966c0.jpg', personality: 'Tricky Tactician' },
       { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', personality: 'Endgame Expert' },
       { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', personality: 'World Champion' },
     ],
