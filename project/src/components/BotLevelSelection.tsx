@@ -13,14 +13,14 @@ const BOT_LEVELS = [
     label: 'Intermediate',
     bots: [
       { name: 'Nishant', rating: 1200, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', personality: 'Tactical and Sharp' },
-      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/524r4GjP/Whats-App-Image-2025-07-31-at-03-07-36-45fb4ae3.jpg', personality: 'University Champion' },
+      { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/RZhdtGRp/Whats-App-Image-2025-08-01-at-00-50-48-3de5e4ec.jpg', personality: 'University Champion' },
       { name: 'Adarsh', rating: 1600, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', personality: 'Solid and Positional' },
     ],
   },
   {
     label: 'Master',
     bots: [
-      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Ls550QWw/sanchitk.jpg', personality: 'Tricky Tactician' },
+      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/Y0y5N0JJ/sanchit.pngnp', personality: 'Tricky Tactician' },
       { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', personality: 'Endgame Expert' },
       { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', personality: 'World Champion' },
     ],
