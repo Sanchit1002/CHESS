@@ -164,7 +164,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ onBack, username }) => {
           </button>
           <div className="text-center">
             <h1 className="text-3xl font-bold text-amber-900 dark:text-amber-300">📊 Analytics & Learning</h1>
-            <p className="text-gray-600 dark:text-white">Track your progress and achievements</p>
+            <p className=" text-gray-900 dark:text-white"> Track your progress and achievements</p>
           </div>
           <div className="w-24"></div>
         </div>

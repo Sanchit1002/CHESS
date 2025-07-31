@@ -21,7 +21,8 @@ export const MoveHistory: React.FC<MoveHistoryProps> = ({ chess }) => {
 
   // This effect will automatically scroll to the latest move
   useEffect(() => {
-    movesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // New, corrected code
+  movesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [groupedMoves]);
 
 
