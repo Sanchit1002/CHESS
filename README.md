@@ -50,6 +50,18 @@ Sign in safely with Firebase-powered email/password login.
 **⚙️ Environment Security:**
 All sensitive credentials are protected via .env configuration.
 
+### 🛠️ Tech Stack
+
+![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?logo=react&logoColor=white&style=for-the-badge)
+![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white&style=for-the-badge)
+![TailwindCSS](https://img.shields.io/badge/Styling-TailwindCSS-38B2AC?logo=tailwind-css&logoColor=white&style=for-the-badge)
+![Chess.js](https://img.shields.io/badge/Logic-Chess.js-000000?style=for-the-badge)
+
+![Firebase](https://img.shields.io/badge/Backend-Firebase-FFCA28?logo=firebase&logoColor=black&style=for-the-badge)
+![Firestore](https://img.shields.io/badge/Database-Firestore-FFA000?logo=firebase&logoColor=white&style=for-the-badge)
+
+![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)
+
 
 **🛠️ Tech Stack**
 
