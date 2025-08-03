@@ -71,35 +71,3 @@ All sensitive credentials are protected via .env configuration.
 ![Firestore](https://img.shields.io/badge/Database-Firestore-FFA000?logo=firebase&logoColor=white&style=for-the-badge)
 
 ![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)
-
-
-**🛠️ Tech Stack**
-
-**🔧 Frontend**
-
-React + TypeScript – Type-safe, scalable UI
-
-Vite – Lightning-fast builds & HMR
-
-Tailwind CSS – Utility-first, responsive design
-
-React Router – Smooth in-app navigation
-
-Lucide Icons – Clean, modern iconography
-
-
-**🔌 Backend**
-
-Firebase Firestore – Real-time NoSQL database
-
-Firebase Authentication – Secure user auth
-
-
-**♟️ Game Logic**
-
-chess.js – Full chess rules, FEN/Pgn support, validation
-
-
-**🚀 Deployment**
-
-Netlify – Fast CI/CD for deployment
