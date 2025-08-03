@@ -50,6 +50,16 @@ Sign in safely with Firebase-powered email/password login.
 **⚙️ Environment Security:**
 All sensitive credentials are protected via .env configuration.
 
+### 🛠️ Tech Stack (Table View)
+
+| Layer        | Technologies                                      |
+|--------------|---------------------------------------------------|
+| **Frontend** | React.js, TypeScript, Tailwind CSS, Chess.js, HTML5, CSS3, JavaScript (ES6+) |
+| **Backend**  | Firebase Firestore (serverless), Firebase SDK     |
+| **Database** | Firebase Firestore (NoSQL, real-time)             |
+| **Deployment**| Netlify                                          |
+
+
 ### 🛠️ Tech Stack
 
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?logo=react&logoColor=white&style=for-the-badge)
