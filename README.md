@@ -54,7 +54,7 @@ All sensitive credentials are protected via .env configuration.
 
 | Layer        | Technologies                                      |
 |--------------|---------------------------------------------------|
-| **Frontend** | React.js, TypeScript, Tailwind CSS, Chess.js, HTML5, CSS3, JavaScript (ES6+) |
+| **Frontend** | React.js, TypeScript, Tailwind CSS, Chess.js      |
 | **Backend**  | Firebase Firestore (serverless), Firebase SDK     |
 | **Database** | Firebase Firestore (NoSQL, real-time)             |
 | **Deployment**| Netlify                                          |
