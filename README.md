@@ -1,4 +1,4 @@
-# ♟️ Real-Time Multiplayer Chess Web Application
+# ♔ Real-Time Multiplayer Chess Web Application
 
 [![Netlify Status](https://img.shields.io/badge/Live-Demo-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)](https://sanchitchess.netlify.app/)
 [![GitHub](https://img.shields.io/badge/Source-GitHub-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Sanchit1002/CHESS.git)
