@@ -1,66 +1,56 @@
-**♟️ Real-Time Multiplayer Chess Web Application**
+# ♟️ Real-Time Multiplayer Chess Web Application
 
-**🎯 Overview**
+[![Netlify Status](https://img.shields.io/badge/Live-Demo-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)](https://sanchitchess.netlify.app/)
+[![GitHub](https://img.shields.io/badge/Source-GitHub-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Sanchit1002/CHESS.git)
 
-An immersive, feature-rich real-time multiplayer chess platform built with modern web technologies. 
-It combines a sleek UI, solid chess logic, and real-time syncing to deliver an engaging and scalable cross-device experience.
+---
 
-**[Deployed with Netlify]**
+## 🎯 Overview
 
-(https://sanchitchess.netlify.app/)
+An immersive and feature-rich **real-time multiplayer chess platform** built using modern web technologies.  
+This app blends a sleek UI, robust chess logic, and real-time data syncing to deliver a scalable and interactive experience across devices.
 
+---
 
-**🌟 Why This Project?**
+## 🌟 Why This Project?
 
-This application was built to showcase:
+This project was designed to explore and demonstrate:
 
-⚡ Real-time data handling using Firebase Firestore
+- ⚡ **Real-time synchronization** using Firebase Firestore  
+- 🎮 **Multiplayer mechanics** powered by `chess.js`  
+- 🧱 **Scalable architecture** and responsive design  
+- 💡 **User-centric design** with interactive elements like chat, leaderboard, and theming  
 
-🎮 Multiplayer logic & synchronization with chess.js
+> Developing this chess app challenged every layer—from real-time logic to UI/UX—resulting in a modern, polished solution.
 
-🧱 Scalable full-stack architecture using modern tools developing this chess app challenged every layer—from game logic to UX—resulting in a truly modern, polished solution.
+---
 
+## ✨ Features at a Glance
 
-**✨ Features at a Glance**
+- ✅ **Real-Time Multiplayer** – Play live chess matches with smooth game state updates
+- 📊 **Dynamic Leaderboard** – Track ratings, wins/losses, and match stats
+- 👥 **Friends System** – Add friends, check online status, and invite them
+- 💬 **In-Game Chat** – Chat with opponents while playing
+- 📜 **Game History** – Review past games and detailed stats
+- 🎨 **Customizable Boards** – Multiple board and piece themes
+- 📱 **Fully Responsive** – Works seamlessly across all screen sizes
+- 🔐 **Secure Auth** – Firebase email/password authentication
+- ⚙️ **.env Security** – All environment variables secured properly
 
-**✅ Real-Time Multiplayer:**
-Play live chess matches with seamless updates and rule validation.
+---
 
-**📊 Dynamic Leaderboard:**
-Track ELO ratings, win/loss stats, and match history in real-time.
+## 🛠️ Tech Stack
 
-**👥 Friends System:**
-Add/accept friends, check online status, and invite them to play.
+### 📦 Tech Stack (Tabular View)
 
-**💬 In-Game Chat:**
-Chat with your opponent during gameplay without leaving the board.
+| **Layer**     | **Technologies**                                |
+|---------------|-------------------------------------------------|
+| **Frontend**  | React.js, TypeScript, Tailwind CSS, Chess.js    |
+| **Backend**   | Firebase Firestore, Firebase SDK (Serverless)   |
+| **Database**  | Firebase Firestore (NoSQL, Real-Time)           |
+| **Deployment**| Netlify                                         |
 
-**📜 Game History:**
-Access detailed stats of your past games.
-
-**🎨 Board Theme Customization:**
-Choose from multiple beautiful board and piece styles.
-
-**📱 Fully Responsive UI:**
-Smooth experience across desktop, tablet, and mobile devices.
-
-**🔐 Secure Authentication:**
-Sign in safely with Firebase-powered email/password login.
-
-**⚙️ Environment Security:**
-All sensitive credentials are protected via .env configuration.
-
-### 🛠️ Tech Stack (Table View)
-
-| Layer        | Technologies                                      |
-|--------------|---------------------------------------------------|
-| **Frontend** | React.js, TypeScript, Tailwind CSS, Chess.js      |
-| **Backend**  | Firebase Firestore (serverless), Firebase SDK     |
-| **Database** | Firebase Firestore (NoSQL, real-time)             |
-| **Deployment**| Netlify                                          |
-
-
-### 🛠️ Tech Stack
+### 🔧 Tech Stack (Badges View)
 
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?logo=react&logoColor=white&style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white&style=for-the-badge)
@@ -71,3 +61,23 @@ All sensitive credentials are protected via .env configuration.
 ![Firestore](https://img.shields.io/badge/Database-Firestore-FFA000?logo=firebase&logoColor=white&style=for-the-badge)
 
 ![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)
+
+---
+
+## 💻 Getting Started
+
+### 🔗 Prerequisites
+
+- Node.js (v16+ recommended)
+- npm or yarn
+- Firebase Project with Firestore enabled
+
+---
+
+### 🚀 Local Setup
+
+#### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Sanchit1002/CHESS.git
+cd CHESS
