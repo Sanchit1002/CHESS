@@ -27,12 +27,11 @@ This project was designed to explore and demonstrate:
 - ✅ **Real-Time Multiplayer** – Play live chess matches with smooth game state updates
 - 📊 **Dynamic Leaderboard** – Track ratings, wins/losses, and match stats
 - 👥 **Friends System** – Add friends, check online status, and invite them
+- 🤖 **Play vs Bot** – Challenge 9 AI bots with increasing difficulty levels
 - 💬 **In-Game Chat** – Chat with opponents while playing
 - 📜 **Game History** – Review past games and detailed stats
-- 🎨 **Customizable Boards** – Multiple board and piece themes
-- 📱 **Fully Responsive** – Works seamlessly across all screen sizes
+- 🎨 **Customizable Boards** – 6 attractive Chess board themes
 - 🔐 **Secure Auth** – Firebase email/password authentication
-- ⚙️ **.env Security** – All environment variables secured properly
 
 
 ## 🛠️ Tech Stack
