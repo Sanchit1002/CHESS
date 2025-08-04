@@ -81,3 +81,59 @@ This project was designed to explore and demonstrate:
 ```bash
 git clone https://github.com/Sanchit1002/CHESS.git
 cd CHESS
+
+#### 2️⃣ Install Dependencies
+```bash
+npm install
+
+### 🔐 3️⃣ Configure Environment Variables
+
+Create a `.env` file in the root directory and add your Firebase configuration:
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+
+## 🖥️ 4️⃣ Start the Development Server
+
+```bash
+npm run dev
+```
+
+Your app will be running locally at:  
+👉 [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🌍 Live Demo
+
+You can try the deployed version here:  
+👉 [https://sanchitchess.netlify.app](https://sanchitchess.netlify.app)
+
+---
+
+## 📁 Folder Structure (Simplified)
+
+```bash
+CHESS/
+├── public/            # Static files
+├── src/
+│   ├── components/    # Reusable React components
+│   ├── pages/         # Page-level components
+│   ├── utils/         # Utility functions and helpers
+│   ├── assets/        # Images, icons, etc.
+│   └── firebase.ts    # Firebase configuration
+├── .env               # Environment variables (not committed)
+├── package.json
+└── vite.config.ts     # Vite configuration
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
