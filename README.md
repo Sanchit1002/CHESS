@@ -37,7 +37,7 @@ This project was designed to explore and demonstrate:
 
 ## 🛠️ Tech Stack
 
-### 📦 Tech Stack (Tabular View)
+### (Tabular View)
 
 | **Layer**     | **Technologies**                                |
 |---------------|-------------------------------------------------|
@@ -46,7 +46,7 @@ This project was designed to explore and demonstrate:
 | **Database**  | Firebase Firestore (NoSQL, Real-Time)           |
 | **Deployment**| Netlify                                         |
 
-### 🔧 Tech Stack (Badges View)
+### (Badges View)
 
 ![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?logo=react&logoColor=white&style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178C6?logo=typescript&logoColor=white&style=for-the-badge)
