@@ -3,14 +3,12 @@
 [![Netlify Status](https://img.shields.io/badge/Live-Demo-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)](https://sanchitchess.netlify.app/)
 [![GitHub](https://img.shields.io/badge/Source-GitHub-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/Sanchit1002/CHESS.git)
 
----
 
 ## 🎯 Overview
 
 An immersive and feature-rich **real-time multiplayer chess platform** built using modern web technologies.  
 This app blends a sleek UI, robust chess logic, and real-time data syncing to deliver a scalable and interactive experience across devices.
 
----
 
 ## 🌟 Why This Project?
 
@@ -23,7 +21,6 @@ This project was designed to explore and demonstrate:
 
 > Developing this chess app challenged every layer—from real-time logic to UI/UX—resulting in a modern, polished solution.
 
----
 
 ## ✨ Features at a Glance
 
@@ -37,7 +34,6 @@ This project was designed to explore and demonstrate:
 - 🔐 **Secure Auth** – Firebase email/password authentication
 - ⚙️ **.env Security** – All environment variables secured properly
 
----
 
 ## 🛠️ Tech Stack
 
@@ -62,7 +58,6 @@ This project was designed to explore and demonstrate:
 
 ![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify&logoColor=white&style=for-the-badge)
 
----
 
 ## 💻 Getting Started
 
