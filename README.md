@@ -76,17 +76,24 @@ This project was designed to explore and demonstrate:
 
 ### 🚀 Local Setup
 
-#### 1️⃣ Clone the Repository
+### 🔹 1️⃣ Clone the Repository
 
 ```bash
 git clone https://github.com/Sanchit1002/CHESS.git
 cd CHESS
+```
 
-#### 2️⃣ Install Dependencies
+---
+
+### 🔹 2️⃣ Install Dependencies
+
 ```bash
 npm install
+```
 
-### 🔐 3️⃣ Configure Environment Variables
+---
+
+### 🔹 🔐 3️⃣ Configure Environment Variables
 
 Create a `.env` file in the root directory and add your Firebase configuration:
 
@@ -97,8 +104,11 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
+```
 
-## 🖥️ 4️⃣ Start the Development Server
+---
+
+### 🔹 🖥️ 4️⃣ Start the Development Server
 
 ```bash
 npm run dev
@@ -109,14 +119,14 @@ Your app will be running locally at:
 
 ---
 
-## 🌍 Live Demo
+### 🌍 Live Demo
 
 You can try the deployed version here:  
 👉 [https://sanchitchess.netlify.app](https://sanchitchess.netlify.app)
 
 ---
 
-## 📁 Folder Structure (Simplified)
+### 📁 Folder Structure (Simplified)
 
 ```bash
 CHESS/
@@ -134,6 +144,7 @@ CHESS/
 
 ---
 
-## 📄 License
+### 📄 License
 
 This project is licensed under the **MIT License**.
+
