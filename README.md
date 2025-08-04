@@ -19,7 +19,7 @@ This project was designed to explore and demonstrate:
 - 🧱 **Scalable architecture** and responsive design  
 - 💡 **User-centric design** with interactive elements like chat, leaderboard, and theming  
 
-> Developing this chess app challenged every layer—from real-time logic to UI/UX—resulting in a modern, polished solution.
+Developing this chess app challenged every layer—from real-time logic to UI/UX—resulting in a modern, polished solution.
 
 
 ## ✨ Features at a Glance
