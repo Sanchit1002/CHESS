@@ -21,6 +21,20 @@ This project was designed to explore and demonstrate:
 
 Developing this chess app challenged every layer—from real-time logic to UI/UX—resulting in a modern, polished solution.
 
+## ⏱️ Game Modes
+
+Enjoy chess the way you like it! This app offers multiple game formats with flexible time controls:
+
+### 🕐 Time Formats
+
+| Mode        | Description         | Time Per Player |
+|-------------|---------------------|-----------------|
+| ⚡ **Blitz**     | Fast-paced games     | 5 minutes        |
+| 🚀 **Rapid**     | Balanced strategy     | 10 minutes       |
+| 🧠 **Classical** | Deep thinking games   | 30 minutes       |
+| 🎛️ **Custom**    | Your preferred timing | Any duration     |
+
+🧩 Whether you're on a tight schedule or looking for a long battle, pick the format that suits your style.
 
 ## ✨ Features at a Glance
 
