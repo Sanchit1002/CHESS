@@ -44,7 +44,7 @@ export const GameAnalysis: React.FC<GameAnalysisProps> = ({ chess, selectedSquar
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
         const square = String.fromCharCode(97 + col) + (8 - row);
-        const piece = chess.get(square as any);
+        const piece = chess.get(square as Square);
         if (piece) {
           const pieceValue = PIECE_VALUES.find(p => p.piece === piece.type)?.value || 0;
           if (piece.color === 'w') {

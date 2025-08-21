@@ -479,14 +479,14 @@ function App() {
   return (
     <div className={isAuthPage ? 'min-h-screen' : ''}>
       {/* Header with dark mode toggle */}
-      <div className="flex items-center justify-end px-4 py-2">
+      <div className="flex items-center justify-end px-2 sm:px-4 py-2">
         <button
           onClick={toggleDarkMode}
-          className="flex items-center space-x-2 px-3 py-2 rounded focus:outline-none bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+          className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded focus:outline-none bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors touch-manipulation"
           title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-          <span className="hidden sm:inline">{darkMode ? 'Light' : 'Dark'} Mode</span>
+          {darkMode ? <Sun size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Moon size={16} className="sm:w-[18px] sm:h-[18px]" />}
+          <span className="hidden sm:inline text-sm sm:text-base">{darkMode ? 'Light' : 'Dark'} Mode</span>
         </button>
       </div>
       {renderContent()}

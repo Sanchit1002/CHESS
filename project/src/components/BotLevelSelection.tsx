@@ -12,17 +12,17 @@ const BOT_LEVELS = [
   {
     label: 'Intermediate',
     bots: [
-      { name: 'Nishant', rating: 1200, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', personality: 'Tactical and Sharp' },
+      { name: 'Niraj', rating: 1200, img: '/images/niraj.png', personality: 'Strategic Shield Master' },
       { name: 'Savi', rating: 1400, img: 'https://i.postimg.cc/RZhdtGRp/Whats-App-Image-2025-08-01-at-00-50-48-3de5e4ec.jpg', personality: 'University Champion' },
-      { name: 'Adarsh', rating: 1600, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', personality: 'Solid and Positional' },
+      { name: 'Nishant', rating: 1600, img: 'https://i.postimg.cc/dVTWQPMB/nishant.jpg', personality: 'Tactical and Sharp' },
     ],
   },
   {
     label: 'Master',
     bots: [
-      { name: 'Sanchit', rating: 1800, img: 'https://i.postimg.cc/qvY8frT4/Whats-App-Image-2025-08-01-at-01-20-53-407966c0.jpg', personality: 'Tricky Tactician' },
-      { name: 'Sakshi', rating: 2000, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', personality: 'Endgame Expert' },
-      { name: 'Gukesh', rating: 2200, img: 'https://i.postimg.cc/8Ps4wFHc/gukesh.jpg', personality: 'World Champion' },
+      { name: 'Adarsh', rating: 1800, img: 'https://i.postimg.cc/MKw3DZLj/adarsh.jpg', personality: 'Solid and Positional' },
+      { name: 'Sanchit', rating: 2000, img: '/images/sanchit.png', personality: 'Tricky Tactician' },
+      { name: 'Sakshi', rating: 2200, img: 'https://i.postimg.cc/13C9SFQ6/sakshi.jpg', personality: 'Endgame Expert' },
     ],
   },
 ];
